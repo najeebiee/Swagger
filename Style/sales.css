@@ -1,5 +1,1 @@
-body { font-family: Arial, sans-serif; padding: 1rem; }
-    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
-    th, td { border: 1px solid #ccc; padding: 0.5rem; font-size: 0.9rem; }
-    th { background: #f4f4f4; text-align: left; }
-    .error { color: red; margin-top: 0.5rem; }
+/* Sales-specific styles will go here in the next phase */

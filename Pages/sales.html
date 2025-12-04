@@ -1,0 +1,21 @@
+<section id="sales-page" class="page">
+  <header class="page-header">
+    <h1 class="page-title">Sales</h1>
+    <p class="page-subtitle">This page will display sales metrics loaded from the API.</p>
+  </header>
+
+  <form id="sales-filter-form" class="toolbar">
+    <label>
+      From
+      <input id="sales-from" type="date" aria-label="From date" required />
+    </label>
+    <label>
+      To
+      <input id="sales-to" type="date" aria-label="To date" required />
+    </label>
+    <button type="submit">Apply</button>
+  </form>
+
+  <div id="sales-summary" class="card-grid"></div>
+  <div id="sales-table-container" class="table-wrapper"></div>
+</section>

@@ -4,29 +4,18 @@
     <p class="page-subtitle">This page will list user data from the API.</p>
   </header>
 
-  <div class="toolbar">
-    <input type="text" placeholder="Search user..." aria-label="Search user" />
-    <button type="button">Refresh</button>
-  </div>
+  <form id="users-filter-form" class="toolbar">
+    <label>
+      From
+      <input id="users-from" type="date" aria-label="From date" required />
+    </label>
+    <label>
+      To
+      <input id="users-to" type="date" aria-label="To date" required />
+    </label>
+    <button type="submit">Apply</button>
+  </form>
 
-  <div class="table-wrapper">
-    <table id="user-table">
-      <thead>
-        <tr>
-          <th>User ID</th>
-          <th>Name</th>
-          <th>Username</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>1001</td>
-          <td>Jane Doe</td>
-          <td>jdoe</td>
-          <td>Active</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <div id="users-summary" class="page-summary"></div>
+  <div id="users-table-container" class="table-container"></div>
 </section>

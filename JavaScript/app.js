@@ -54,6 +54,15 @@ async function loadPage(route, path) {
     if (route === 'sales' && typeof window.initSalesPage === 'function') {
       window.initSalesPage();
     }
+
+    if (route === 'codes' && typeof window.initCodesPage === 'function') {
+      window.initCodesPage();
+    }
+
+    if (route === 'user' && typeof window.initUsersPage === 'function') {
+      window.initUsersPage();
+    }
+    
   } catch (error) {
     console.error(error);
     contentEl.innerHTML = '<div class="empty-state">Sorry, we could not load that page. Please try again.</div>';

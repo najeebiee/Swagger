@@ -1,6 +1,6 @@
 const SALES_API_USER = 'ggitteam';
-const SALES_API_KEY = '2320251204';
-const SALES_ENDPOINT = '/api.get.sales.php';
+const SALES_API_KEY = '0720251205';
+const SALES_ENDPOINT = '/api/sales';
 
 function getDefaultDateRange() {
   const today = new Date();

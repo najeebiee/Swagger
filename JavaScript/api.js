@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://gmin.onegrindersguild.com';
+const API_BASE_URL = 'http://localhost:4000';
 
 /**
  * Perform a GET request against the Swagger backend.
@@ -15,13 +15,21 @@ async function apiGet(path, params = {}) {
     }
   });
 
-  const response = await fetch(url.toString());
-  if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
-  }
+  console.log('Calling API:', url.toString()); // debug
 
-  return response.json();
+  try {
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      console.error('API response not OK:', response.status, response.statusText);
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+    return await response.json();
+  } catch (err) {
+    console.error('apiGet error:', err);
+    throw err;
+  }
 }
+
 
 // Expose globally for other modules to consume.
 window.apiGet = apiGet;

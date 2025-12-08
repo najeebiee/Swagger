@@ -96,12 +96,6 @@ function initUserUplinePage() {
   const usernameInput = document.getElementById('user-upline-username');
   const filterForm    = document.getElementById('user-upline-filter-form');
 
-  const defaultUsername = 'GGUILD23'; // or Ironman, or whatever you tested in Postman
-
-  if (usernameInput) {
-    usernameInput.value = defaultUsername;
-  }
-
   if (filterForm) {
     filterForm.addEventListener('submit', (event) => {
       event.preventDefault();

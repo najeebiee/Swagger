@@ -46,33 +46,28 @@ async function loadUserUplineData({ username }) {
   const tableContainer = document.getElementById('user-upline-table-container');
   const summaryEl      = document.getElementById('user-upline-summary');
 
-  if (!username) {
-    if (tableContainer) {
-      tableContainer.innerHTML =
-        '<div class="empty-state">Enter a username and click Apply to view the upline.</div>';
-    }
-    if (summaryEl) {
-      summaryEl.innerHTML = '';
-    }
-    return [];
-  }
-
   if (tableContainer) {
     tableContainer.innerHTML =
       '<div class="empty-state">Loading user upline data...</div>';
   }
 
   try {
-    const result = await apiGet(USER_UPLINE_ENDPOINT, {
-      user:     USER_UPLINE_API_USER,
-      apikey:   getUserUplineApiKey(),
-      username: username          // 👈 plain username – proxy hashes to accounthash
-    });
+    const params = {
+      user:   USER_UPLINE_API_USER,
+      apikey: getUserUplineApiKey()
+    };
+
+    // Only send username if there is one; otherwise backend uses ROOT_UPLINE_HASH
+    if (username) {
+      params.username = username;
+    }
+
+    const result = await apiGet(USER_UPLINE_ENDPOINT, params);
 
     const rows = Array.isArray(result?.data) ? result.data : [];
 
     if (!rows.length) {
-      console.warn('No user upline data found for username:', username);
+      console.warn('No user upline data found for username:', username || '(root)');
     }
 
     renderUserUplineSummary(rows, summaryEl);
@@ -84,12 +79,11 @@ async function loadUserUplineData({ username }) {
       tableContainer.innerHTML =
         '<div class="empty-state">Sorry, we could not load the user upline data. Please try again.</div>';
     }
-    if (summaryEl) {
-      summaryEl.innerHTML = '';
-    }
+    if (summaryEl) summaryEl.innerHTML = '';
     return [];
   }
 }
+
 
 // PAGE INIT
 function initUserUplinePage() {
@@ -104,9 +98,10 @@ function initUserUplinePage() {
     });
   }
 
-  // Initial auto-load for default user
-  loadUserUplineData({ username: defaultUsername });
+  // Initial load with NO username → backend uses ROOT_UPLINE_HASH
+  loadUserUplineData({ username: '' });
 }
+
 
 window.loadUserUplineData = loadUserUplineData;
 window.initUserUplinePage = initUserUplinePage;

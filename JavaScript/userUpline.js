@@ -114,6 +114,5 @@ function initUserUplinePage() {
   loadUserUplineData({ username: defaultUsername });
 }
 
-
 window.loadUserUplineData = loadUserUplineData;
 window.initUserUplinePage = initUserUplinePage;

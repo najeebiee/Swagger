@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       .update(username)
       .digest('hex');
 
-    const url = new URL('https://gmin.onegrindersguild.com/api.get.user.binary.upline.php');
+    const url = new URL('https://gmin.onegrindersguild.com/api.get.user.upline.binary.php');
     url.searchParams.set('user', user);
     url.searchParams.set('apikey', apikey);
     url.searchParams.set('accounthash', accounthash);

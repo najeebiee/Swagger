@@ -7,6 +7,7 @@
   --text: #1f2933;
   --muted: #52606d;
   --accent: #4f46e5;
+  --accent-dark: #4338ca; /* Added for hover consistency */
 }
 
 * {
@@ -15,17 +16,20 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Using Inter font as a standard modern UI font */
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   background: var(--bg);
   color: var(--text);
 }
 
+/* --- Layout: App Shell --- */
 .app-shell {
   display: flex;
   min-height: 100vh;
   background: var(--bg);
 }
 
+/* --- Layout: Sidebar (Desktop) --- */
 .sidebar {
   width: 240px;
   background: var(--sidebar-bg);
@@ -37,6 +41,7 @@ body {
   position: sticky;
   top: 0;
   height: 100vh;
+  flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -56,6 +61,7 @@ body {
   font-size: 0.95rem;
 }
 
+/* --- Navigation --- */
 .nav-list {
   list-style: none;
   padding: 0;
@@ -70,14 +76,16 @@ body {
 }
 
 .nav-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Space for an optional icon */
   padding: 12px 14px;
   text-decoration: none;
   color: var(--text);
   border-radius: 10px;
   border: 1px solid transparent;
   font-weight: 600;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .nav-link:hover {
@@ -92,11 +100,13 @@ body {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
+/* --- Layout: Main Content Area --- */
 #app-content {
   flex: 1;
   padding: 32px;
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%; /* Ensures proper width calculation */
 }
 
 .page-header {
@@ -115,6 +125,7 @@ body {
   font-size: 1rem;
 }
 
+/* --- Cards/Stats --- */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -128,6 +139,7 @@ body {
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  /* Added subtle transition for interaction on hover/active in sales.css */
 }
 
 .card-title {
@@ -142,11 +154,12 @@ body {
   font-weight: 700;
 }
 
+/* --- Form/Filter Elements --- */
 .toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  align-items: center;
+  align-items: flex-end; /* Align items to the bottom baseline */
   margin-bottom: 16px;
 }
 
@@ -156,6 +169,7 @@ body {
   gap: 6px;
   font-weight: 600;
   color: var(--muted);
+  flex-shrink: 0; /* Prevents labels from shrinking */
 }
 
 input[type="text"],
@@ -166,6 +180,7 @@ button {
   border: 1px solid var(--border);
   font-size: 0.95rem;
   font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 input[type="text"],
@@ -174,20 +189,49 @@ input[type="date"] {
   min-width: 200px;
 }
 
+/* Improved Input Focus/Hover States */
+input[type="text"]:hover,
+input[type="date"]:hover {
+  border-color: var(--muted);
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2); /* Soft blue glow */
+  outline: none;
+}
+
+/* Improved Focus State for ALL interactive elements */
+input:focus,
+button:focus,
+.nav-link:focus {
+  outline: 2px solid var(--accent); /* Clearer focus indicator */
+  outline-offset: 2px;
+}
+
 button {
   background: var(--accent);
   color: #fff;
   cursor: pointer;
   border-color: var(--accent);
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, transform 0.1s ease;
 }
 
 button:hover {
-  background: #4338ca;
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
 }
 
 button:active {
   transform: translateY(1px);
+}
+
+/* --- Table Styles --- */
+.table-wrapper {
+  margin-top: 16px;
+  overflow-x: auto; /* Allows horizontal scrolling on small screens */
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -197,6 +241,7 @@ table {
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
+  min-width: 700px; /* Ensure table columns don't compress too much */
 }
 
 table thead {
@@ -205,53 +250,94 @@ table thead {
 
 th,
 td {
-  padding: 10px 12px;
+  padding: 12px 14px;
   text-align: left;
   border-bottom: 1px solid var(--border);
   font-size: 0.95rem;
+  vertical-align: middle;
 }
 
 th {
   font-weight: 700;
   color: var(--muted);
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
 }
 
 tbody tr:last-child td {
   border-bottom: none;
 }
 
-.table-wrapper {
+.empty-state {
+  padding: 32px;
+  background: var(--panel);
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 1.1rem;
+  font-style: italic;
   margin-top: 16px;
 }
 
-.empty-state {
-  padding: 16px;
-  background: var(--panel);
-  border: 1px dashed var(--border);
-  border-radius: 12px;
-  color: var(--muted);
-}
-
+/* --- Responsive Design for Mobile (<= 768px) --- */
 @media (max-width: 768px) {
   .app-shell {
     flex-direction: column;
   }
 
+  /* Sidebar becomes a horizontal header/navbar */
   .sidebar {
     position: relative;
     width: 100%;
     height: auto;
     flex-direction: row;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
+    padding: 12px 20px; /* Reduced vertical padding */
+    border-bottom: 1px solid var(--border); /* Better visual separation */
+    border-right: none;
+    overflow-x: auto; /* Allows scrolling if many nav links exist */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sidebar-header {
+    flex-shrink: 0;
+    margin-right: 16px;
+  }
+  
+  /* Hide subtitle on small screens to save space */
+  .app-subtitle {
+      display: none;
   }
 
   .nav-list {
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap; /* Keep links inline */
+    flex-grow: 1;
+    gap: 6px;
+  }
+  
+  .nav-link {
+    flex-shrink: 0;
+    padding: 8px 12px; /* Smaller link size */
   }
 
   #app-content {
-    padding: 20px;
+    padding: 20px 16px; /* Reduced padding for mobile */
+  }
+  
+  .page-title {
+    font-size: 1.75rem;
+  }
+  
+  .page-subtitle {
+    font-size: 0.9rem;
+  }
+
+  /* Cards might look better in a single column on smallest devices */
+  .card-grid {
+    grid-template-columns: 1fr;
   }
 }

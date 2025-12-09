@@ -100,15 +100,15 @@ function initSponsoredDownlinePage() {
             const username = usernameInput ? usernameInput.value.trim() : '';
             
             if (!username) {
-                loadSponsoredDownline({ username: '', reloadFromServer: true });
+                loadSponsoredDownlineData({ username: '', reloadFromServer: true });
             }else {
-                loadSponsoredDownline({ username, reloadFromServer: false });
+                loadSponsoredDownlineData({ username, reloadFromServer: false });
             }
         });
     }
 
     // Initial load
-    loadSponsoredDownline({ username: '', reloadFromServer: true });
+    loadSponsoredDownlineData({ username: '', reloadFromServer: true });
 }
 
 window.loadSponsoredDownlineData = loadSponsoredDownlineData;

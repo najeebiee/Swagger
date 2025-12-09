@@ -2,6 +2,8 @@
 const SPONSORED_DOWNLINE_API_USER = 'ggitteam';
 const SPONSORED_DOWNLINE_ENDPOINT = '/api/sponsoredDownline';
 
+let sponsoredDownlineRowsCache = [];
+
 function getSponsoredDownlineApiKey() {
   return generateApiKey(); // same helper as other pages
 }
@@ -72,6 +74,8 @@ async function loadSponsoredDownlineData({ username }) {
         ? result
         : [];
 
+    sponsoredDownlineRowsCache = rows;
+
     if (!rows.length) {
       console.warn('No sponsored downline data found for username:', username || '(root)');
     }
@@ -94,12 +98,33 @@ async function loadSponsoredDownlineData({ username }) {
 function initSponsoredDownlinePage() {
   const usernameInput = document.getElementById('sponsored-downline-username');
   const filterForm    = document.getElementById('sponsored-downline-filter-form');
+  const tableSearchInput = document.getElementById('sponsored-downline-table-search');
 
   if (filterForm) {
     filterForm.addEventListener('submit', (event) => {
       event.preventDefault();
       const username = usernameInput ? usernameInput.value.trim() : '';
       loadSponsoredDownlineData({ username });
+    });
+  }
+
+  if (tableSearchInput) {
+    tableSearchInput.addEventListener('input', () => {
+      const term = tableSearchInput.value.trim().toLowerCase();
+
+      const rows = !term
+        ? sponsoredDownlineRowsCache
+        : sponsoredDownlineRowsCache.filter((row) =>
+            [
+              'user_name',
+              'user',
+              'account_type',
+              'payment',
+              'registered'
+            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
+          );
+
+      renderSponsoredDownlineTable(rows);
     });
   }
 

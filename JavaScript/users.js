@@ -2,6 +2,8 @@
 const USERS_API_USER = 'ggitteam';
 const USERS_ENDPOINT = '/api/users';
 
+let usersRowsCache = [];
+
 function getUsersApiKey() {
   return generateApiKey();
 }
@@ -89,6 +91,8 @@ async function loadUsersData({ df, dt, search }) {
 
     const rows = Array.isArray(result?.data) ? result.data : [];
 
+    usersRowsCache = rows;
+
     if (!rows.length) {
       console.warn(`API call returned 0 users for date range: ${df} to ${dt}.`);
     }
@@ -110,10 +114,11 @@ async function loadUsersData({ df, dt, search }) {
 
 // PAGE INIT
 function initUsersPage() {
-  const searchInput = document.getElementById('users-search');
   const fromInput   = document.getElementById('users-from');
   const toInput     = document.getElementById('users-to');
   const filterForm  = document.getElementById('users-filter-form');
+  const tableSearchInput = document.getElementById('users-table-search');
+  const search = '';
 
   const { from, to } = getDefaultDateRange();
   if (fromInput && !fromInput.value) fromInput.value = from;
@@ -124,8 +129,28 @@ function initUsersPage() {
       e.preventDefault();
       const df = formatDateForApi(fromInput?.value);
       const dt = formatDateForApi(toInput?.value);
-      const search = searchInput?.value || '';
       loadUsersData({ df, dt, search });
+    });
+  }
+
+  if (tableSearchInput) {
+    tableSearchInput.addEventListener('input', () => {
+      const term = tableSearchInput.value.trim().toLowerCase();
+
+      const rows = !term
+        ? usersRowsCache
+        : usersRowsCache.filter((row) =>
+            [
+              'user_name',
+              'name',
+              'sponsored',
+              'placement',
+              'account_type',
+              'status'
+            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
+          );
+
+      renderUsersTable(rows);
     });
   }
 
@@ -136,9 +161,7 @@ function initUsersPage() {
 
   const initialDf      = formatDateForApi(fromInput.value);
   const initialDt      = formatDateForApi(toInput.value);
-  const initialSearch  = searchInput?.value || '';
-
-  loadUsersData({ df: initialDf, dt: initialDt, search: initialSearch });
+  loadUsersData({ df: initialDf, dt: initialDt, search });
 }
 
 window.initUsersPage = initUsersPage;

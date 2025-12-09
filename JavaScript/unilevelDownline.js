@@ -2,6 +2,8 @@
 const UNILEVEL_DOWNLINE_API_USER = 'ggitteam';
 const UNILEVEL_DOWNLINE_ENDPOINT = '/api/unilevelDownline';
 
+let unilevelDownlineRowsCache = [];
+
 function getUnilevelDownlineApiKey() {
   return generateApiKey(); // same helper as other pages
 }
@@ -72,6 +74,8 @@ async function loadUnilevelDownlineData({ username }) {
         ? result
         : [];
 
+    unilevelDownlineRowsCache = rows;
+
     if (!rows.length) {
       console.warn('No unilevel downline data found for username:', username || '(root)');
     }
@@ -94,12 +98,33 @@ async function loadUnilevelDownlineData({ username }) {
 function initUnilevelDownlinePage() {
   const usernameInput = document.getElementById('unilevel-downline-username');
   const filterForm    = document.getElementById('unilevel-downline-filter-form');
+  const tableSearchInput = document.getElementById('unilevel-downline-table-search');
 
   if (filterForm) {
     filterForm.addEventListener('submit', (event) => {
       event.preventDefault();
       const username = usernameInput ? usernameInput.value.trim() : '';
       loadUnilevelDownlineData({ username });
+    });
+  }
+
+  if (tableSearchInput) {
+    tableSearchInput.addEventListener('input', () => {
+      const term = tableSearchInput.value.trim().toLowerCase();
+
+      const rows = !term
+        ? unilevelDownlineRowsCache
+        : unilevelDownlineRowsCache.filter((row) =>
+            [
+              'user_name',
+              'user',
+              'account_type',
+              'payment',
+              'registered'
+            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
+          );
+
+      renderUnilevelDownlineTable(rows);
     });
   }
 

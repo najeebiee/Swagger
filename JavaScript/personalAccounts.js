@@ -2,6 +2,8 @@
 const PERSONAL_ACCOUNTS_API_USER = 'ggitteam';
 const PERSONAL_ACCOUNTS_ENDPOINT = '/api/personalAccounts';
 
+let personalAccountsRowsCache = [];
+
 function getPersonalAccountsApiKey() {
   return generateApiKey(); // same helper as other pages
 }
@@ -72,6 +74,8 @@ async function loadPersonalAccountsData({ username }) {
         ? result
         : [];
 
+    personalAccountsRowsCache = rows;
+
     if (!rows.length) {
       console.warn('No personal accounts data found for username:', username || '(root)');
     }
@@ -94,12 +98,33 @@ async function loadPersonalAccountsData({ username }) {
 function initPersonalAccountsPage() {
   const usernameInput = document.getElementById('personal-accounts-username');
   const filterForm    = document.getElementById('personal-accounts-filter-form');
+  const tableSearchInput = document.getElementById('personal-accounts-table-search');
 
   if (filterForm) {
     filterForm.addEventListener('submit', (event) => {
       event.preventDefault();
       const username = usernameInput ? usernameInput.value.trim() : '';
       loadPersonalAccountsData({ username });
+    });
+  }
+
+  if (tableSearchInput) {
+    tableSearchInput.addEventListener('input', () => {
+      const term = tableSearchInput.value.trim().toLowerCase();
+
+      const rows = !term
+        ? personalAccountsRowsCache
+        : personalAccountsRowsCache.filter((row) =>
+            [
+              'user_name',
+              'user',
+              'account_type',
+              'payment',
+              'registered'
+            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
+          );
+
+      renderPersonalAccountsTable(rows);
     });
   }
 

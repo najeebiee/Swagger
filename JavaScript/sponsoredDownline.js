@@ -115,6 +115,7 @@ function initSponsoredDownlinePage() {
         loadSponsoredDownlineData({ username: '', reloadFromServer: true });
       } else {
         // filter in cache
+        console.log('Filtering sponsored downline for username:', username);
         loadSponsoredDownlineData({ username, reloadFromServer: false });
       }
     });

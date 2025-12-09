@@ -2,8 +2,8 @@
 const USER_UPLINE_API_USER = 'ggitteam';
 const USER_UPLINE_ENDPOINT = '/api/userUpline';
 
-// cache of the "root" upline data loaded on first call
-let userUplineCache = [];
+// cache of the last loaded rows
+let userUplineRowsCache = [];
 
 function getUserUplineApiKey() {
   return generateApiKey(); // same helper as other pages
@@ -77,6 +77,7 @@ async function loadUserUplineData({ username }) {
       console.warn('No user upline data found for username:', username || '(root)');
     }
 
+    userUplineRowsCache = rows;
     renderUserUplineSummary(rows, summaryEl);
     renderUserUplineTable(rows);
     return rows;
@@ -96,12 +97,29 @@ async function loadUserUplineData({ username }) {
 function initUserUplinePage() {
   const usernameInput = document.getElementById('user-upline-username');
   const filterForm    = document.getElementById('user-upline-filter-form');
+  const tableSearchInput = document.getElementById('user-upline-table-search');
 
   if (filterForm) {
     filterForm.addEventListener('submit', (event) => {
       event.preventDefault();
       const username = usernameInput ? usernameInput.value.trim() : '';
       loadUserUplineData({ username });
+    });
+  }
+
+  if (tableSearchInput) {
+    tableSearchInput.addEventListener('input', () => {
+      const term = tableSearchInput.value.trim().toLowerCase();
+
+      const rows = !term
+        ? userUplineRowsCache
+        : userUplineRowsCache.filter((row) =>
+            ['lvl', 'user_name', 'user', 'placement'].some((key) =>
+              String(row[key] ?? '').toLowerCase().includes(term)
+            )
+          );
+
+      renderUserUplineTable(rows);
     });
   }
 

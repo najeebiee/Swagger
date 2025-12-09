@@ -2,6 +2,8 @@
 const UNILEVEL_UPLINE_API_USER = 'ggitteam';
 const UNILEVEL_UPLINE_ENDPOINT = '/api/unilevelUpline';
 
+let unilevelUplineRowsCache = [];
+
 function getUnilevelUplineApiKey() {
   return generateApiKey(); // same helper as other pages
 }
@@ -76,6 +78,7 @@ async function loadUnilevelUplineData({ username }) {
       console.warn('No unilevel upline data found for username:', username || '(root)');
     }
 
+    unilevelUplineRowsCache = rows;
     renderUnilevelUplineSummary(rows, summaryEl);
     renderUnilevelUplineTable(rows);
     return rows;
@@ -94,12 +97,32 @@ async function loadUnilevelUplineData({ username }) {
 function initUnilevelUplinePage() {
   const usernameInput = document.getElementById('unilevel-upline-username');
   const filterForm    = document.getElementById('unilevel-upline-filter-form');
+  const tableSearchInput = document.getElementById('unilevel-upline-table-search');
 
   if (filterForm) {
     filterForm.addEventListener('submit', (event) => {
       event.preventDefault();
       const username = usernameInput ? usernameInput.value.trim() : '';
       loadUnilevelUplineData({ username });
+    });
+  }
+
+  if (tableSearchInput) {
+    tableSearchInput.addEventListener('input', () => {
+      const term = tableSearchInput.value.trim().toLowerCase();
+
+      const rows = !term
+        ? unilevelUplineRowsCache
+        : unilevelUplineRowsCache.filter((row) =>
+            [
+              'user_name',
+              'user',
+              'account_type',
+              'payment'
+            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
+          );
+
+      renderUnilevelUplineTable(rows);
     });
   }
 

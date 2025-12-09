@@ -2,6 +2,8 @@
 const BINARY_DOWNLINE_API_USER = 'ggitteam';
 const BINARY_DOWNLINE_ENDPOINT = '/api/binaryDownline';
 
+let binaryDownlineRowsCache = [];
+
 function getBinaryDownlineApiKey() {
   return generateApiKey(); // same helper as other pages
 }
@@ -78,6 +80,7 @@ async function loadBinaryDownlineData({ username }) {
       console.warn('No binary downline data found for username:', username || '(root)');
     }
 
+    binaryDownlineRowsCache = rows;
     renderBinaryDownlineSummary(rows, summaryEl);
     renderBinaryDownlineTable(rows);
     return rows;
@@ -96,12 +99,33 @@ async function loadBinaryDownlineData({ username }) {
 function initBinaryDownlinePage() {
   const usernameInput = document.getElementById('binary-downline-username');
   const filterForm    = document.getElementById('binary-downline-filter-form');
+  const tableSearchInput = document.getElementById('binary-downline-table-search');
 
   if (filterForm) {
     filterForm.addEventListener('submit', (event) => {
       event.preventDefault();
       const username = usernameInput ? usernameInput.value.trim() : '';
       loadBinaryDownlineData({ username });
+    });
+  }
+
+  if (tableSearchInput) {
+    tableSearchInput.addEventListener('input', () => {
+      const term = tableSearchInput.value.trim().toLowerCase();
+
+      const rows = !term
+        ? binaryDownlineRowsCache
+        : binaryDownlineRowsCache.filter((row) =>
+            [
+              'user_name',
+              'user',
+              'placement',
+              'placement_group',
+              'account_type'
+            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
+          );
+
+      renderBinaryDownlineTable(rows);
     });
   }
 

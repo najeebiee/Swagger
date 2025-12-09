@@ -2,6 +2,8 @@
 const CODES_API_USER = 'ggitteam';
 const CODES_ENDPOINT = '/api/codes';
 
+let codesRowsCache = [];
+
 function getCodesApiKey() {
   return generateApiKey();
 }
@@ -74,11 +76,12 @@ async function loadCodesData({ df, dt, search }) {
       : Array.isArray(result)
         ? result
         : [];
-    
+
     if (!rows.length) {
       console.warn(`API call returned 0 codes for date range: ${df} to ${dt}.`);
     }
 
+    codesRowsCache = rows;
     renderCodesSummary(rows, summaryEl);
     renderCodesTable(rows);
   } catch (err) {
@@ -99,6 +102,7 @@ function initCodesPage() {
   const fromInput   = document.getElementById('codes-from');
   const toInput     = document.getElementById('codes-to');
   const filterForm  = document.getElementById('codes-filter-form');
+  const tableSearchInput = document.getElementById('codes-table-search');
 
   const { from, to } = getDefaultDateRange();
   if (fromInput && !fromInput.value) fromInput.value = from;
@@ -118,6 +122,27 @@ function initCodesPage() {
   if (!fromInput || !toInput) {
     console.error('Date input elements not found in the DOM.');
     return;
+  }
+
+  if (tableSearchInput) {
+    tableSearchInput.addEventListener('input', () => {
+      const term = tableSearchInput.value.trim().toLowerCase();
+
+      const rows = !term
+        ? codesRowsCache
+        : codesRowsCache.filter((row) =>
+            [
+              'owner_user_name',
+              'owner_name',
+              'code',
+              'code_status',
+              'used_by_user_name',
+              'sponsor_login_name'
+            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
+          );
+
+      renderCodesTable(rows);
+    });
   }
 
   const initialDf     = formatDateForApi(fromInput.value);

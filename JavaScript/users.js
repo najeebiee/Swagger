@@ -2,6 +2,8 @@
 const USERS_API_USER = 'ggitteam';
 const USERS_ENDPOINT = '/api/users';
 
+let usersRowsCache = [];
+
 function getUsersApiKey() {
   return generateApiKey();
 }
@@ -93,6 +95,7 @@ async function loadUsersData({ df, dt, search }) {
       console.warn(`API call returned 0 users for date range: ${df} to ${dt}.`);
     }
 
+    usersRowsCache = rows;
     renderUsersSummary(rows, summaryEl);
     renderUsersTable(rows);
   } catch (err) {
@@ -114,6 +117,7 @@ function initUsersPage() {
   const fromInput   = document.getElementById('users-from');
   const toInput     = document.getElementById('users-to');
   const filterForm  = document.getElementById('users-filter-form');
+  const tableSearchInput = document.getElementById('users-table-search');
 
   const { from, to } = getDefaultDateRange();
   if (fromInput && !fromInput.value) fromInput.value = from;
@@ -132,6 +136,27 @@ function initUsersPage() {
   if (!fromInput || !toInput) {
     console.error('Cannot initialize Users page: Missing date inputs.');
     return;
+  }
+
+  if (tableSearchInput) {
+    tableSearchInput.addEventListener('input', () => {
+      const term = tableSearchInput.value.trim().toLowerCase();
+
+      const rows = !term
+        ? usersRowsCache
+        : usersRowsCache.filter((row) =>
+            [
+              'user_name',
+              'name',
+              'sponsored',
+              'placement',
+              'account_type',
+              'status'
+            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
+          );
+
+      renderUsersTable(rows);
+    });
   }
 
   const initialDf      = formatDateForApi(fromInput.value);

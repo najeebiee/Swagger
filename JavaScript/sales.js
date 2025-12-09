@@ -2,6 +2,8 @@
 const SALES_API_USER = 'ggitteam';
 const SALES_ENDPOINT = '/api/sales';
 
+let salesRowsCache = [];
+
 function getSalesApiKey() {
   return generateApiKey();
 }
@@ -84,6 +86,7 @@ async function loadSalesData({ df, dt }) {
       console.warn(`API call returned 0 sales for date range: ${df} to ${dt}.`);
     }
 
+    salesRowsCache = rows;
     renderSalesSummary(rows, summaryEl);
     renderSalesTable(rows);
     return rows;
@@ -106,6 +109,7 @@ function initSalesPage() {
   const fromInput = document.getElementById('sales-from');
   const toInput   = document.getElementById('sales-to');
   const filterForm  = document.getElementById('sales-filter-form');
+  const tableSearchInput = document.getElementById('sales-table-search');
 
   const { from, to } = getDefaultDateRange();
   if (fromInput && !fromInput.value) fromInput.value = from;
@@ -123,6 +127,26 @@ function initSalesPage() {
   if (!fromInput || !toInput) {
     console.error('Sales page is missing date input fields.');
     return;
+  }
+
+  if (tableSearchInput) {
+    tableSearchInput.addEventListener('input', () => {
+      const term = tableSearchInput.value.trim().toLowerCase();
+
+      const rows = !term
+        ? salesRowsCache
+        : salesRowsCache.filter((row) =>
+            [
+              'store_name',
+              'store_type',
+              'user',
+              'user_name',
+              'code_sku'
+            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
+          );
+
+      renderSalesTable(rows);
+    });
   }
 
   const initialDf = formatDateForApi(fromInput.value);

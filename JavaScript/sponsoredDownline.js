@@ -1,6 +1,6 @@
 // USER UPLINE CONFIG
-const USER_UPLINE_API_USER = 'ggitteam';
-const USER_UPLINE_ENDPOINT = '/api/sponsoredDownline';
+const SPONSORED_DOWNLINE_API_USER = 'ggitteam';
+const SPONSORED_DOWNLINE_ENDPOINT = '/api/sponsoredDownline';
 
 // cache of the "root" upline data loaded on first call
 let sponsoredDownlineCache = [];

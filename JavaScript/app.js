@@ -76,8 +76,12 @@ async function loadPage(route, path) {
 
     if (route === 'binaryDownline' && typeof window.initBinaryDownlinePage === 'function') {
       window.initBinaryDownlinePage();
-    } 
-    
+    }
+
+    if (route === 'unilevelDownline' && typeof window.initUnilevelDownlinePage === 'function') {
+      window.initUnilevelDownlinePage();
+    }
+
   } catch (error) {
     console.error(error);
     contentEl.innerHTML = '<div class="empty-state">Sorry, we could not load that page. Please try again.</div>';

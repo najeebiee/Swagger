@@ -70,7 +70,7 @@ async function loadSponsoredDownlineData({ username, reloadFromServer }) {
     try {
         const result = await apiGet(SPONSORED_DOWNLINE_ENDPOINT, {
             user: SPONSORED_DOWNLINE_API_USER,
-            api_key: getSponsoredDownlineApiKey()
+            apikey: getSponsoredDownlineApiKey()
         });
 
         const rows = Array.isArray(result.data) ? result.data : [];

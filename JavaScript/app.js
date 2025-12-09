@@ -74,9 +74,9 @@ async function loadPage(route, path) {
       window.initSponsoredDownlinePage();
     }
 
-    if (route === 'binaryDownline' && typeof window.initBinaryDownlinePage === 'function') {
+    /* if (route === 'binaryDownline' && typeof window.initBinaryDownlinePage === 'function') {
       window.initBinaryDownlinePage();
-    }
+    } */
     
   } catch (error) {
     console.error(error);

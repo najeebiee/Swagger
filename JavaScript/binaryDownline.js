@@ -1,5 +1,5 @@
 // BINARY DOWNLINE CONFIG
-const BINARY_DOWNLINE_API_USER = 'ggitteam';
+/*const BINARY_DOWNLINE_API_USER = 'ggitteam';
 const BINARY_DOWNLINE_ENDPOINT = '/api/binaryDownline';
 
 function getBinaryDownlineApiKey() {
@@ -111,3 +111,4 @@ function initBinaryDownlinePage() {
 
 window.loadBinaryDownlineData = loadBinaryDownlineData;
 window.initBinaryDownlinePage = initBinaryDownlinePage;
+*/

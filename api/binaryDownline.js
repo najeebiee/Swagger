@@ -1,6 +1,6 @@
 // api/binaryDownline.js
 
-import crypto from 'crypto';
+/* import crypto from 'crypto';
 
 // ✅ Use the hash that works in Postman for the full tree
 const ROOT_DOWNLINE_HASH = '6e532682ce16ea8c4011b6f711d97975';
@@ -48,3 +48,4 @@ export default async function handler(req, res) {
     res.status(500).json({ error: 'Proxy failed', details: err.message });
   }
 }
+*/

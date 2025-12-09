@@ -3,7 +3,8 @@ const ROUTES = {
   user: 'Pages/user.html',
   codes: 'Pages/codes.html',
   sales: 'Pages/sales.html',
-  userUpline: 'Pages/userUpline.html'
+  userUpline: 'Pages/userUpline.html',
+  sponsoredDownline: 'Pages/sponsoredDownline.html'
 };
 
 function initApp() {
@@ -66,6 +67,10 @@ async function loadPage(route, path) {
 
     if (route === 'userUpline' && typeof window.initUserUplinePage === 'function') {
       window.initUserUplinePage();
+    }
+
+    if (route === 'sponsoredDownline' && typeof window.initSponsoredDownlinePage === 'function') {
+      window.initSponsoredDownlinePage();
     }
     
   } catch (error) {

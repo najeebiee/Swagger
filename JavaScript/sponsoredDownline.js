@@ -32,7 +32,7 @@ function renderSponsoredDownlineSummary(rows, summaryEl) {
 
 // TABLE WRAPPER (uses shared renderTable from common.js)
 function renderSponsoredDownlineTable(rows) {
-  const tableContainer = document.getElementById('sponsored-downline-table-container');
+  const tableContainer = document.getElementById('sponsored-downline-container');
     const columns = [
         { key: 'idno',          label: 'ID NO' },
         { key: 'registered',    label: 'REGISTERED' },
@@ -46,7 +46,7 @@ function renderSponsoredDownlineTable(rows) {
 }
 
 async function loadSponsoredDownlineData({ username, reloadFromServer }) {
-    const tableContainer = document.getElementById('sponsored-downline-table-container');
+    const tableContainer = document.getElementById('sponsored-downline-container');
     const summaryEl      = document.getElementById('sponsored-downline-summary');
 
     // 1) Client-side filter mode (no API call)
@@ -70,7 +70,7 @@ async function loadSponsoredDownlineData({ username, reloadFromServer }) {
     try {
         const result = await apiGet(SPONSORED_DOWNLINE_ENDPOINT, {
             user: SPONSORED_DOWNLINE_API_USER,
-            apikey: getSponsoredDownlineApiKey()
+            api_key: getSponsoredDownlineApiKey()
         });
 
         const rows = Array.isArray(result.data) ? result.data : [];

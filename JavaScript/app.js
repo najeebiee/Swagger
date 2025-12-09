@@ -9,7 +9,8 @@ const ROUTES = {
   unilevelDownline: 'Pages/unilevelDownline.html',
   unilevelUpline: 'Pages/unilevelUpline.html',
   personalAccounts: 'Pages/personalAccounts.html',
-  mlmSwagger: 'Pages/mlmSwagger.html',
+  networkActivity: 'Pages/networkActivity.html',
+  mlmSwagger: 'Pages/mlmSwagger.html'
 };
 
 function initApp() {
@@ -92,6 +93,10 @@ async function loadPage(route, path) {
 
     if (route === 'personalAccounts' && typeof window.initPersonalAccountsPage === 'function') {
       window.initPersonalAccountsPage();
+    }
+
+    if (route === 'mlmSwagger' && typeof window.initMlmSwaggerPage === 'function') {
+      window.initMlmSwaggerPage();
     }
 
   } catch (error) {

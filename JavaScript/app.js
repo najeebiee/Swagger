@@ -95,6 +95,10 @@ async function loadPage(route, path) {
       window.initPersonalAccountsPage();
     }
 
+    if (route === 'networkActivity' && typeof window.initNetworkActivityPage === 'function') {
+      window.initNetworkActivityPage();
+    }
+
     if (route === 'mlmSwagger' && typeof window.initMlmSwaggerPage === 'function') {
       window.initMlmSwaggerPage();
     }

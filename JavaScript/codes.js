@@ -2,6 +2,8 @@
 const CODES_API_USER = 'ggitteam';
 const CODES_ENDPOINT = '/api/codes';
 
+let codesRowsCache = [];
+
 function getCodesApiKey() {
   return generateApiKey();
 }
@@ -74,6 +76,8 @@ async function loadCodesData({ df, dt, search }) {
       : Array.isArray(result)
         ? result
         : [];
+
+    codesRowsCache = rows;
     
     if (!rows.length) {
       console.warn(`API call returned 0 codes for date range: ${df} to ${dt}.`);
@@ -95,10 +99,11 @@ async function loadCodesData({ df, dt, search }) {
 
 // PAGE INIT
 function initCodesPage() {
-  const searchInput = document.getElementById('codes-search');
   const fromInput   = document.getElementById('codes-from');
   const toInput     = document.getElementById('codes-to');
   const filterForm  = document.getElementById('codes-filter-form');
+  const tableSearchInput = document.getElementById('codes-table-search');
+  const search = '';
 
   const { from, to } = getDefaultDateRange();
   if (fromInput && !fromInput.value) fromInput.value = from;
@@ -109,9 +114,29 @@ function initCodesPage() {
       e.preventDefault();
       const df = formatDateForApi(fromInput?.value);
       const dt = formatDateForApi(toInput?.value);
-      const search = searchInput?.value || '';
 
       loadCodesData({ df, dt, search });
+    });
+  }
+
+  if (tableSearchInput) {
+    tableSearchInput.addEventListener('input', () => {
+      const term = tableSearchInput.value.trim().toLowerCase();
+
+      const rows = !term
+        ? codesRowsCache
+        : codesRowsCache.filter((row) =>
+            [
+              'owner_user_name',
+              'owner_name',
+              'used_by_user_name',
+              'code',
+              'code_status',
+              'code_sku'
+            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
+          );
+
+      renderCodesTable(rows);
     });
   }
 
@@ -122,9 +147,7 @@ function initCodesPage() {
 
   const initialDf     = formatDateForApi(fromInput.value);
   const initialDt     = formatDateForApi(toInput.value);
-  const initialSearch = searchInput?.value || '';
-
-  loadCodesData({ df: initialDf, dt: initialDt, search: initialSearch });
+  loadCodesData({ df: initialDf, dt: initialDt, search });
 }
 
 window.initCodesPage = initCodesPage;

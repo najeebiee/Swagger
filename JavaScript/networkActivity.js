@@ -2,6 +2,8 @@
 const NETWORK_ACTIVITY_API_USER = 'ggitteam';
 const NETWORK_ACTIVITY_ENDPOINT = '/api/networkActivity';
 
+let networkActivityRowsCache = [];
+
 function getNetworkActivityApiKey() {
   return generateApiKey(); // same helper as other pages
 }
@@ -69,6 +71,8 @@ async function loadNetworkActivityData({ username }) {
         ? result
         : [];
 
+    networkActivityRowsCache = rows;
+
     if (!rows.length) {
       console.warn('No network activity data found for username:', username || '(root)');
     }
@@ -91,12 +95,28 @@ async function loadNetworkActivityData({ username }) {
 function initNetworkActivityPage() {
   const usernameInput = document.getElementById('network-activity-username');
   const filterForm    = document.getElementById('network-activity-filter-form');
+  const tableSearchInput = document.getElementById('network-activity-table-search');
 
   if (filterForm) {
     filterForm.addEventListener('submit', (event) => {
       event.preventDefault();
       const username = usernameInput ? usernameInput.value.trim() : '';
       loadNetworkActivityData({ username });
+    });
+  }
+
+  if (tableSearchInput) {
+    tableSearchInput.addEventListener('input', () => {
+      const term = tableSearchInput.value.trim().toLowerCase();
+
+      const rows = !term
+        ? networkActivityRowsCache
+        : networkActivityRowsCache.filter((row) =>
+            ['requestdate', 'amount', 'remarks']
+              .some((key) => String(row[key] ?? '').toLowerCase().includes(term))
+          );
+
+      renderNetworkActivityTable(rows);
     });
   }
 

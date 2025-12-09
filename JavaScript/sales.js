@@ -2,6 +2,8 @@
 const SALES_API_USER = 'ggitteam';
 const SALES_ENDPOINT = '/api/sales';
 
+let salesRowsCache = [];
+
 function getSalesApiKey() {
   return generateApiKey();
 }
@@ -80,6 +82,8 @@ async function loadSalesData({ df, dt }) {
 
     const rows = Array.isArray(result?.data) ? result.data : [];
 
+    salesRowsCache = rows;
+
     if (!rows.length) {
       console.warn(`API call returned 0 sales for date range: ${df} to ${dt}.`);
     }
@@ -102,10 +106,10 @@ async function loadSalesData({ df, dt }) {
 
 // PAGE INIT
 function initSalesPage() {
-  const searchInput = document.getElementById('sales-search');
   const fromInput = document.getElementById('sales-from');
   const toInput   = document.getElementById('sales-to');
   const filterForm  = document.getElementById('sales-filter-form');
+  const tableSearchInput = document.getElementById('sales-table-search');
 
   const { from, to } = getDefaultDateRange();
   if (fromInput && !fromInput.value) fromInput.value = from;
@@ -120,6 +124,26 @@ function initSalesPage() {
     });
   }
 
+  if (tableSearchInput) {
+    tableSearchInput.addEventListener('input', () => {
+      const term = tableSearchInput.value.trim().toLowerCase();
+
+      const rows = !term
+        ? salesRowsCache
+        : salesRowsCache.filter((row) =>
+            [
+              'store_name',
+              'store_type',
+              'user',
+              'user_name',
+              'code_sku'
+            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
+          );
+
+      renderSalesTable(rows);
+    });
+  }
+
   if (!fromInput || !toInput) {
     console.error('Sales page is missing date input fields.');
     return;
@@ -127,9 +151,8 @@ function initSalesPage() {
 
   const initialDf = formatDateForApi(fromInput.value);
   const initialDt = formatDateForApi(toInput.value);
-  const initialSearch = searchInput?.value || '';
 
-  loadSalesData({ df: initialDf, dt: initialDt, search: initialSearch });
+  loadSalesData({ df: initialDf, dt: initialDt });
 }
 
 window.loadSalesData = loadSalesData;

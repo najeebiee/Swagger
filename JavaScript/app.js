@@ -4,7 +4,8 @@ const ROUTES = {
   codes: 'Pages/codes.html',
   sales: 'Pages/sales.html',
   userUpline: 'Pages/userUpline.html',
-  sponsoredDownline: 'Pages/sponsoredDownline.html'
+  sponsoredDownline: 'Pages/sponsoredDownline.html',
+  binaryDownline: 'Pages/binaryDownline.html'
 };
 
 function initApp() {
@@ -71,6 +72,10 @@ async function loadPage(route, path) {
 
     if (route === 'sponsoredDownline' && typeof window.initSponsoredDownlinePage === 'function') {
       window.initSponsoredDownlinePage();
+    }
+
+    if (route === 'binaryDownline' && typeof window.initBinaryDownlinePage === 'function') {
+      window.initBinaryDownlinePage();
     }
     
   } catch (error) {

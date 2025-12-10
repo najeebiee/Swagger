@@ -17,7 +17,7 @@ const userColumns = [
   { key: 'status',       label: 'Status' }
 ];
 
-let usersAllRows = [];
+let usersCachedRows = [];
 let usersVisibleRows = [];
 
 function getUsersApiKey() {
@@ -73,10 +73,33 @@ function renderUsersTable(rows) {
   renderTable(tableContainer, userColumns, rows);
 }
 
+function applyUsersVisibleRows(visibleRows) {
+  usersVisibleRows = Array.isArray(visibleRows) ? visibleRows : [];
+
+  const summaryEl = document.getElementById('users-summary');
+
+  renderUsersSummary(usersVisibleRows, summaryEl);
+  renderUsersTable(usersVisibleRows);
+}
+
+function filterUsersRows(rows, term) {
+  if (!term) return rows.slice();
+
+  const lowered = term.toLowerCase();
+
+  return rows.filter((row) =>
+    userColumns.some((col) => {
+      const value = row[col.key];
+      return value && String(value).toLowerCase().includes(lowered);
+    })
+  );
+}
+
 // DATA LOADING
 async function loadUsersData({ df, dt }) {
-  const summaryEl      = document.getElementById('users-summary');
   const tableContainer = document.getElementById('users-table-container');
+  const tableSearch    = document.getElementById('users-table-search');
+  const tableSearchClear = document.getElementById('users-table-search-clear');
 
   if (tableContainer) {
     tableContainer.innerHTML = '<div class="empty-state">Loading users...</div>';
@@ -96,42 +119,35 @@ async function loadUsersData({ df, dt }) {
       console.warn(`API call returned 0 users for date range: ${df} to ${dt}.`);
     }
 
-    usersAllRows     = rows;
-    usersVisibleRows = rows;
+    usersCachedRows = rows;
+    if (tableSearch) tableSearch.value = '';
+    if (tableSearchClear) tableSearchClear.disabled = true;
 
-    renderUsersSummary(rows, summaryEl);
-    renderUsersTable(usersVisibleRows);
+    applyUsersVisibleRows(usersCachedRows);
   } catch (err) {
     console.error('Failed to load users', err);
     if (tableContainer) {
       tableContainer.innerHTML =
         '<div class="empty-state">Unable to load users. Please try again later.</div>';
     }
-    if (summaryEl) {
-      summaryEl.innerHTML = '';
-    }
+    applyUsersVisibleRows([]);
     return [];
   }
 }
 
 function applyUsersTableSearch() {
   const input = document.getElementById('users-table-search');
+  const clearBtn = document.getElementById('users-table-search-clear');
   if (!input) return;
 
-  const term = input.value.trim().toLowerCase();
+  const term = input.value.trim();
 
-  if (!term) {
-    usersVisibleRows = usersAllRows.slice();
-  } else {
-    usersVisibleRows = usersAllRows.filter((row) =>
-      userColumns.some((col) => {
-        const value = row[col.key];
-        return value && String(value).toLowerCase().includes(term);
-      })
-    );
+  if (clearBtn) {
+    clearBtn.disabled = !term;
   }
 
-  renderUsersTable(usersVisibleRows);
+  const filteredRows = filterUsersRows(usersCachedRows, term);
+  applyUsersVisibleRows(filteredRows);
 }
 
 // PAGE INIT
@@ -140,6 +156,7 @@ function initUsersPage() {
   const toInput     = document.getElementById('users-to');
   const filterForm  = document.getElementById('users-filter-form');
   const tableSearch = document.getElementById('users-table-search');
+  const tableSearchClear = document.getElementById('users-table-search-clear');
   const exportCsvBtn  = document.getElementById('users-export-csv');
   const exportXlsxBtn = document.getElementById('users-export-xlsx');
   const exportPdfBtn  = document.getElementById('users-export-pdf');
@@ -164,6 +181,15 @@ function initUsersPage() {
 
   if (tableSearch) {
     tableSearch.addEventListener('input', applyUsersTableSearch);
+  }
+
+  if (tableSearchClear) {
+    tableSearchClear.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (tableSearch) tableSearch.value = '';
+      tableSearchClear.disabled = true;
+      applyUsersVisibleRows(usersCachedRows);
+    });
   }
 
   if (exportCsvBtn) {

@@ -10,7 +10,7 @@ const userUplineColumns = [
   { key: 'placement', label: 'PLACEMENT' }
 ];
 
-let userUplineAllRows = [];
+let userUplineCachedRows = [];
 let userUplineVisibleRows = [];
 
 function getUserUplineApiKey() {
@@ -45,6 +45,25 @@ function renderUserUplineTable(rows) {
   renderTable(tableContainer, userUplineColumns, rows);
 }
 
+function applyUserUplineVisibleRows(visibleRows) {
+  userUplineVisibleRows = Array.isArray(visibleRows) ? visibleRows : [];
+
+  const summaryEl = document.getElementById('user-upline-summary');
+
+  renderUserUplineSummary(userUplineVisibleRows, summaryEl);
+  renderUserUplineTable(userUplineVisibleRows);
+}
+
+function filterUserUplineRows(rows, term) {
+  if (!term) return rows.slice();
+
+  const lowered = term.toLowerCase();
+
+  return rows.filter((row) =>
+    userUplineColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(lowered))
+  );
+}
+
 /**
  * Load data:
  * - If reloadFromServer = true → call API (root hash on backend), cache rows
@@ -52,7 +71,8 @@ function renderUserUplineTable(rows) {
  */
 async function loadUserUplineData({ username }) {
   const tableContainer = document.getElementById('user-upline-table-container');
-  const summaryEl      = document.getElementById('user-upline-summary');
+  const tableSearchInput = document.getElementById('user-upline-table-search');
+  const tableSearchClear = document.getElementById('user-upline-table-search-clear');
 
   if (tableContainer) {
     tableContainer.innerHTML =
@@ -78,10 +98,11 @@ async function loadUserUplineData({ username }) {
       console.warn('No user upline data found for username:', username || '(root)');
     }
 
-    userUplineAllRows = rows;
-    userUplineVisibleRows = rows;
-    renderUserUplineSummary(userUplineVisibleRows, summaryEl);
-    renderUserUplineTable(userUplineVisibleRows);
+    userUplineCachedRows = rows;
+    if (tableSearchInput) tableSearchInput.value = '';
+    if (tableSearchClear) tableSearchClear.disabled = true;
+
+    applyUserUplineVisibleRows(userUplineCachedRows);
     return rows;
   } catch (error) {
     console.error('Failed to load user upline data', error);
@@ -89,7 +110,7 @@ async function loadUserUplineData({ username }) {
       tableContainer.innerHTML =
         '<div class="empty-state">Sorry, we could not load the user upline data. Please try again.</div>';
     }
-    if (summaryEl) summaryEl.innerHTML = '';
+    applyUserUplineVisibleRows([]);
     return [];
   }
 }
@@ -100,6 +121,7 @@ function initUserUplinePage() {
   const usernameInput = document.getElementById('user-upline-username');
   const filterForm    = document.getElementById('user-upline-filter-form');
   const tableSearchInput = document.getElementById('user-upline-table-search');
+  const tableSearchClear = document.getElementById('user-upline-table-search-clear');
   const exportCsvBtn = document.getElementById('user-upline-export-csv');
   const exportXlsxBtn = document.getElementById('user-upline-export-xlsx');
   const exportPdfBtn = document.getElementById('user-upline-export-pdf');
@@ -114,6 +136,15 @@ function initUserUplinePage() {
 
   if (tableSearchInput) {
     tableSearchInput.addEventListener('input', applyUserUplineTableSearch);
+  }
+
+  if (tableSearchClear) {
+    tableSearchClear.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (tableSearchInput) tableSearchInput.value = '';
+      tableSearchClear.disabled = true;
+      applyUserUplineVisibleRows(userUplineCachedRows);
+    });
   }
 
   if (exportCsvBtn) {
@@ -145,22 +176,19 @@ function initUserUplinePage() {
 }
 
 function applyUserUplineTableSearch() {
-  const summaryEl = document.getElementById('user-upline-summary');
   const input = document.getElementById('user-upline-table-search');
+  const clearBtn = document.getElementById('user-upline-table-search-clear');
   if (!input) return;
 
-  const term = input.value.trim().toLowerCase();
+  const term = input.value.trim();
 
-  if (!term) {
-    userUplineVisibleRows = userUplineAllRows.slice();
-  } else {
-    userUplineVisibleRows = userUplineAllRows.filter((row) =>
-      userUplineColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(term))
-    );
+  if (clearBtn) {
+    clearBtn.disabled = !term;
   }
 
-  renderUserUplineSummary(userUplineVisibleRows, summaryEl);
-  renderUserUplineTable(userUplineVisibleRows);
+  const filteredRows = filterUserUplineRows(userUplineCachedRows, term);
+
+  applyUserUplineVisibleRows(filteredRows);
 }
 
 

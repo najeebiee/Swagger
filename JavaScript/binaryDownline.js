@@ -13,7 +13,7 @@ const binaryDownlineColumns = [
   { key: 'payment',           label: 'PAYMENT' }
 ];
 
-let binaryDownlineAllRows = [];
+let binaryDownlineCachedRows = [];
 let binaryDownlineVisibleRows = [];
 
 function getBinaryDownlineApiKey() {
@@ -48,10 +48,30 @@ function renderBinaryDownlineTable(rows) {
   renderTable(tableContainer, binaryDownlineColumns, rows);
 }
 
+function applyBinaryDownlineVisibleRows(visibleRows) {
+  binaryDownlineVisibleRows = Array.isArray(visibleRows) ? visibleRows : [];
+
+  const summaryEl = document.getElementById('binary-downline-summary');
+
+  renderBinaryDownlineSummary(binaryDownlineVisibleRows, summaryEl);
+  renderBinaryDownlineTable(binaryDownlineVisibleRows);
+}
+
+function filterBinaryDownlineRows(rows, term) {
+  if (!term) return rows.slice();
+
+  const lowered = term.toLowerCase();
+
+  return rows.filter((row) =>
+    binaryDownlineColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(lowered))
+  );
+}
+
 // DATA LOADING – always call the API (like your "proper" user upline)
 async function loadBinaryDownlineData({ username }) {
   const tableContainer = document.getElementById('binary-downline-table-container');
-  const summaryEl      = document.getElementById('binary-downline-summary');
+  const tableSearchInput = document.getElementById('binary-downline-table-search');
+  const tableSearchClear = document.getElementById('binary-downline-table-search-clear');
 
   if (tableContainer) {
     tableContainer.innerHTML =
@@ -82,10 +102,11 @@ async function loadBinaryDownlineData({ username }) {
       console.warn('No binary downline data found for username:', username || '(root)');
     }
 
-    binaryDownlineAllRows = rows;
-    binaryDownlineVisibleRows = rows;
-    renderBinaryDownlineSummary(binaryDownlineVisibleRows, summaryEl);
-    renderBinaryDownlineTable(binaryDownlineVisibleRows);
+    binaryDownlineCachedRows = rows;
+    if (tableSearchInput) tableSearchInput.value = '';
+    if (tableSearchClear) tableSearchClear.disabled = true;
+
+    applyBinaryDownlineVisibleRows(binaryDownlineCachedRows);
     return rows;
   } catch (error) {
     console.error('Failed to load binary downline data', error);
@@ -93,7 +114,7 @@ async function loadBinaryDownlineData({ username }) {
       tableContainer.innerHTML =
         '<div class="empty-state">Sorry, we could not load the binary downline data. Please try again.</div>';
     }
-    if (summaryEl) summaryEl.innerHTML = '';
+    applyBinaryDownlineVisibleRows([]);
     return [];
   }
 }
@@ -103,6 +124,7 @@ function initBinaryDownlinePage() {
   const usernameInput = document.getElementById('binary-downline-username');
   const filterForm    = document.getElementById('binary-downline-filter-form');
   const tableSearchInput = document.getElementById('binary-downline-table-search');
+  const tableSearchClear = document.getElementById('binary-downline-table-search-clear');
   const exportCsvBtn = document.getElementById('binary-downline-export-csv');
   const exportXlsxBtn = document.getElementById('binary-downline-export-xlsx');
   const exportPdfBtn = document.getElementById('binary-downline-export-pdf');
@@ -117,6 +139,15 @@ function initBinaryDownlinePage() {
 
   if (tableSearchInput) {
     tableSearchInput.addEventListener('input', applyBinaryDownlineTableSearch);
+  }
+
+  if (tableSearchClear) {
+    tableSearchClear.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (tableSearchInput) tableSearchInput.value = '';
+      tableSearchClear.disabled = true;
+      applyBinaryDownlineVisibleRows(binaryDownlineCachedRows);
+    });
   }
 
   if (exportCsvBtn) {
@@ -148,22 +179,19 @@ function initBinaryDownlinePage() {
 }
 
 function applyBinaryDownlineTableSearch() {
-  const summaryEl = document.getElementById('binary-downline-summary');
   const input = document.getElementById('binary-downline-table-search');
+  const clearBtn = document.getElementById('binary-downline-table-search-clear');
   if (!input) return;
 
-  const term = input.value.trim().toLowerCase();
+  const term = input.value.trim();
 
-  if (!term) {
-    binaryDownlineVisibleRows = binaryDownlineAllRows.slice();
-  } else {
-    binaryDownlineVisibleRows = binaryDownlineAllRows.filter((row) =>
-      binaryDownlineColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(term))
-    );
+  if (clearBtn) {
+    clearBtn.disabled = !term;
   }
 
-  renderBinaryDownlineSummary(binaryDownlineVisibleRows, summaryEl);
-  renderBinaryDownlineTable(binaryDownlineVisibleRows);
+  const filteredRows = filterBinaryDownlineRows(binaryDownlineCachedRows, term);
+
+  applyBinaryDownlineVisibleRows(filteredRows);
 }
 
 window.loadBinaryDownlineData = loadBinaryDownlineData;

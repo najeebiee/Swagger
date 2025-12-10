@@ -19,7 +19,7 @@ const codesColumns = [
   { key: 'code_date_created',  label: 'Code Date Created'},
 ];
 
-let codesAllRows = [];
+let codesCachedRows = [];
 let codesVisibleRows = [];
 
 function getCodesApiKey() {
@@ -55,10 +55,31 @@ function renderCodesTable(rows) {
   renderTable(tableContainer, codesColumns, rows);
 }
 
+function applyCodesVisibleRows(visibleRows) {
+  codesVisibleRows = Array.isArray(visibleRows) ? visibleRows : [];
+
+  const summaryEl = document.getElementById('codes-summary');
+
+  renderCodesSummary(codesVisibleRows, summaryEl);
+  renderCodesTable(codesVisibleRows);
+}
+
+function filterCodesRows(rows, term) {
+  if (!term) return rows.slice();
+
+  const lowered = term.toLowerCase();
+
+  return rows.filter((row) =>
+    codesColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(lowered))
+  );
+}
+
 // DATA LOADING
 async function loadCodesData({ df, dt }) {
   const summaryEl      = document.getElementById('codes-summary');
   const tableContainer = document.getElementById('codes-table-container');
+  const tableSearchInput = document.getElementById('codes-table-search');
+  const tableSearchClear = document.getElementById('codes-table-search-clear');
 
   if (tableContainer) {
     tableContainer.innerHTML = '<div class="empty-state">Loading codes...</div>';
@@ -82,10 +103,11 @@ async function loadCodesData({ df, dt }) {
       console.warn(`API call returned 0 codes for date range: ${df} to ${dt}.`);
     }
 
-    codesAllRows = rows;
-    codesVisibleRows = rows;
-    renderCodesSummary(codesVisibleRows, summaryEl);
-    renderCodesTable(codesVisibleRows);
+    codesCachedRows = rows;
+    if (tableSearchInput) tableSearchInput.value = '';
+    if (tableSearchClear) tableSearchClear.disabled = true;
+
+    applyCodesVisibleRows(codesCachedRows);
   } catch (err) {
     console.error('Failed to load codes', err);
     if (tableContainer) {
@@ -94,6 +116,8 @@ async function loadCodesData({ df, dt }) {
     if (summaryEl) {
       summaryEl.innerHTML = '';
     }
+    codesCachedRows = [];
+    applyCodesVisibleRows([]);
     return [];
   }
 }
@@ -104,6 +128,7 @@ function initCodesPage() {
   const toInput     = document.getElementById('codes-to');
   const filterForm  = document.getElementById('codes-filter-form');
   const tableSearchInput = document.getElementById('codes-table-search');
+  const tableSearchClear = document.getElementById('codes-table-search-clear');
   const exportCsvBtn = document.getElementById('codes-export-csv');
   const exportXlsxBtn = document.getElementById('codes-export-xlsx');
   const exportPdfBtn = document.getElementById('codes-export-pdf');
@@ -129,6 +154,15 @@ function initCodesPage() {
 
   if (tableSearchInput) {
     tableSearchInput.addEventListener('input', applyCodesTableSearch);
+  }
+
+  if (tableSearchClear) {
+    tableSearchClear.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (tableSearchInput) tableSearchInput.value = '';
+      tableSearchClear.disabled = true;
+      applyCodesVisibleRows(codesCachedRows);
+    });
   }
 
   if (exportCsvBtn) {
@@ -164,20 +198,19 @@ function initCodesPage() {
 function applyCodesTableSearch() {
   const summaryEl = document.getElementById('codes-summary');
   const input = document.getElementById('codes-table-search');
+  const clearBtn = document.getElementById('codes-table-search-clear');
   if (!input) return;
 
-  const term = input.value.trim().toLowerCase();
+  const term = input.value.trim();
 
-  if (!term) {
-    codesVisibleRows = codesAllRows.slice();
-  } else {
-    codesVisibleRows = codesAllRows.filter((row) =>
-      codesColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(term))
-    );
+  if (clearBtn) {
+    clearBtn.disabled = !term;
   }
 
-  renderCodesSummary(codesVisibleRows, summaryEl);
-  renderCodesTable(codesVisibleRows);
+  const filteredRows = filterCodesRows(codesCachedRows, term);
+
+  renderCodesSummary(filteredRows, summaryEl);
+  renderCodesTable(filteredRows);
 }
 
 window.initCodesPage = initCodesPage;

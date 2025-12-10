@@ -8,7 +8,7 @@ const networkActivityColumns = [
   { key: 'remarks',       label: 'REMARKS' }
 ];
 
-let networkActivityAllRows = [];
+let networkActivityCachedRows = [];
 let networkActivityVisibleRows = [];
 
 function getNetworkActivityApiKey() {
@@ -43,10 +43,35 @@ function renderNetworkActivityTable(rows) {
   renderTable(tableContainer, networkActivityColumns, rows);
 }
 
+function applyNetworkActivityVisibleRows(visibleRows) {
+  networkActivityVisibleRows = Array.isArray(visibleRows) ? visibleRows : [];
+
+  const summaryEl = document.getElementById('network-activity-summary');
+
+  renderNetworkActivityTable(networkActivityVisibleRows);
+  if (summaryEl) {
+    renderNetworkActivitySummary(networkActivityVisibleRows, summaryEl);
+  }
+}
+
+function filterNetworkActivityRows(rows, term) {
+  if (!term) return rows.slice();
+
+  const lowered = term.toLowerCase();
+
+  return rows.filter((row) =>
+    networkActivityColumns.some((col) => {
+      const value = row[col.key];
+      return value && String(value).toLowerCase().includes(lowered);
+    })
+  );
+}
+
 // DATA LOADING – always call the API (like your "proper" user upline)
 async function loadNetworkActivityData({ username }) {
   const tableContainer = document.getElementById('network-activity-table-container');
-  const summaryEl      = document.getElementById('network-activity-summary');
+  const tableSearchInput = document.getElementById('network-activity-table-search');
+  const tableSearchClear = document.getElementById('network-activity-table-search-clear');
 
   if (tableContainer) {
     tableContainer.innerHTML =
@@ -77,10 +102,10 @@ async function loadNetworkActivityData({ username }) {
       console.warn('No network activity data found for username:', username || '(root)');
     }
 
-    networkActivityAllRows = rows;
-    networkActivityVisibleRows = rows;
-    renderNetworkActivitySummary(networkActivityVisibleRows, summaryEl);
-    renderNetworkActivityTable(networkActivityVisibleRows);
+    networkActivityCachedRows = rows;
+    if (tableSearchInput) tableSearchInput.value = '';
+    if (tableSearchClear) tableSearchClear.disabled = true;
+    applyNetworkActivityVisibleRows(networkActivityCachedRows);
     return rows;
   } catch (error) {
     console.error('Failed to load network activity data', error);
@@ -88,7 +113,7 @@ async function loadNetworkActivityData({ username }) {
       tableContainer.innerHTML =
         '<div class="empty-state">Sorry, we could not load the network activity data. Please try again.</div>';
     }
-    if (summaryEl) summaryEl.innerHTML = '';
+    applyNetworkActivityVisibleRows([]);
     return [];
   }
 }
@@ -98,6 +123,7 @@ function initNetworkActivityPage() {
   const usernameInput = document.getElementById('network-activity-username');
   const filterForm    = document.getElementById('network-activity-filter-form');
   const tableSearchInput = document.getElementById('network-activity-table-search');
+  const tableSearchClear = document.getElementById('network-activity-table-search-clear');
   const exportCsvBtn = document.getElementById('network-activity-export-csv');
   const exportXlsxBtn = document.getElementById('network-activity-export-xlsx');
   const exportPdfBtn = document.getElementById('network-activity-export-pdf');
@@ -112,6 +138,15 @@ function initNetworkActivityPage() {
 
   if (tableSearchInput) {
     tableSearchInput.addEventListener('input', applyNetworkActivityTableSearch);
+  }
+
+  if (tableSearchClear) {
+    tableSearchClear.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (tableSearchInput) tableSearchInput.value = '';
+      tableSearchClear.disabled = true;
+      applyNetworkActivityVisibleRows(networkActivityCachedRows);
+    });
   }
 
   if (exportCsvBtn) {
@@ -156,24 +191,16 @@ function initNetworkActivityPage() {
 
 function applyNetworkActivityTableSearch() {
   const input = document.getElementById('network-activity-table-search');
-  const term = input ? input.value.trim().toLowerCase() : '';
+  const clearBtn = document.getElementById('network-activity-table-search-clear');
+  const term = input ? input.value.trim() : '';
 
-  if (!term) {
-    networkActivityVisibleRows = networkActivityAllRows.slice();
-  } else {
-    networkActivityVisibleRows = networkActivityAllRows.filter((row) =>
-      networkActivityColumns.some((col) => {
-        const value = row[col.key];
-        return value && String(value).toLowerCase().includes(term);
-      })
-    );
+  if (clearBtn) {
+    clearBtn.disabled = !term;
   }
 
-  renderNetworkActivityTable(networkActivityVisibleRows);
-  const summaryEl = document.getElementById('network-activity-summary');
-  if (summaryEl) {
-    renderNetworkActivitySummary(networkActivityVisibleRows, summaryEl);
-  }
+  const filteredRows = filterNetworkActivityRows(networkActivityCachedRows, term);
+
+  applyNetworkActivityVisibleRows(filteredRows);
 }
 
 window.loadNetworkActivityData = loadNetworkActivityData;

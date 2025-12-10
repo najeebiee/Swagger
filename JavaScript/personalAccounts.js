@@ -11,7 +11,7 @@ const personalAccountsColumns = [
   { key: 'payment',      label: 'PAYMENT' }
 ];
 
-let personalAccountsAllRows = [];
+let personalAccountsCachedRows = [];
 let personalAccountsVisibleRows = [];
 
 function getPersonalAccountsApiKey() {
@@ -46,10 +46,35 @@ function renderPersonalAccountsTable(rows) {
   renderTable(tableContainer, personalAccountsColumns, rows);
 }
 
+function applyPersonalAccountsVisibleRows(visibleRows) {
+  personalAccountsVisibleRows = Array.isArray(visibleRows) ? visibleRows : [];
+
+  const summaryEl = document.getElementById('personal-accounts-summary');
+
+  renderPersonalAccountsTable(personalAccountsVisibleRows);
+  if (summaryEl) {
+    renderPersonalAccountsSummary(personalAccountsVisibleRows, summaryEl);
+  }
+}
+
+function filterPersonalAccountsRows(rows, term) {
+  if (!term) return rows.slice();
+
+  const lowered = term.toLowerCase();
+
+  return rows.filter((row) =>
+    personalAccountsColumns.some((col) => {
+      const value = row[col.key];
+      return value && String(value).toLowerCase().includes(lowered);
+    })
+  );
+}
+
 // DATA LOADING – always call the API (like your "proper" user upline)
 async function loadPersonalAccountsData({ username }) {
   const tableContainer = document.getElementById('personal-accounts-table-container');
-  const summaryEl      = document.getElementById('personal-accounts-summary');
+  const tableSearchInput = document.getElementById('personal-accounts-table-search');
+  const tableSearchClear = document.getElementById('personal-accounts-table-search-clear');
 
   if (tableContainer) {
     tableContainer.innerHTML =
@@ -80,10 +105,10 @@ async function loadPersonalAccountsData({ username }) {
       console.warn('No personal accounts data found for username:', username || '(root)');
     }
 
-    personalAccountsAllRows = rows;
-    personalAccountsVisibleRows = rows;
-    renderPersonalAccountsSummary(personalAccountsVisibleRows, summaryEl);
-    renderPersonalAccountsTable(personalAccountsVisibleRows);
+    personalAccountsCachedRows = rows;
+    if (tableSearchInput) tableSearchInput.value = '';
+    if (tableSearchClear) tableSearchClear.disabled = true;
+    applyPersonalAccountsVisibleRows(personalAccountsCachedRows);
     return rows;
   } catch (error) {
     console.error('Failed to load personal accounts data', error);
@@ -91,7 +116,7 @@ async function loadPersonalAccountsData({ username }) {
       tableContainer.innerHTML =
         '<div class="empty-state">Sorry, we could not load the personal accounts data. Please try again.</div>';
     }
-    if (summaryEl) summaryEl.innerHTML = '';
+    applyPersonalAccountsVisibleRows([]);
     return [];
   }
 }
@@ -101,6 +126,7 @@ function initPersonalAccountsPage() {
   const usernameInput = document.getElementById('personal-accounts-username');
   const filterForm    = document.getElementById('personal-accounts-filter-form');
   const tableSearchInput = document.getElementById('personal-accounts-table-search');
+  const tableSearchClear = document.getElementById('personal-accounts-table-search-clear');
   const exportCsvBtn = document.getElementById('personal-accounts-export-csv');
   const exportXlsxBtn = document.getElementById('personal-accounts-export-xlsx');
   const exportPdfBtn = document.getElementById('personal-accounts-export-pdf');
@@ -115,6 +141,15 @@ function initPersonalAccountsPage() {
 
   if (tableSearchInput) {
     tableSearchInput.addEventListener('input', applyPersonalAccountsTableSearch);
+  }
+
+  if (tableSearchClear) {
+    tableSearchClear.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (tableSearchInput) tableSearchInput.value = '';
+      tableSearchClear.disabled = true;
+      applyPersonalAccountsVisibleRows(personalAccountsCachedRows);
+    });
   }
 
   if (exportCsvBtn) {
@@ -159,24 +194,16 @@ function initPersonalAccountsPage() {
 
 function applyPersonalAccountsTableSearch() {
   const input = document.getElementById('personal-accounts-table-search');
-  const term = input ? input.value.trim().toLowerCase() : '';
+  const clearBtn = document.getElementById('personal-accounts-table-search-clear');
+  const term = input ? input.value.trim() : '';
 
-  if (!term) {
-    personalAccountsVisibleRows = personalAccountsAllRows.slice();
-  } else {
-    personalAccountsVisibleRows = personalAccountsAllRows.filter((row) =>
-      personalAccountsColumns.some((col) => {
-        const value = row[col.key];
-        return value && String(value).toLowerCase().includes(term);
-      })
-    );
+  if (clearBtn) {
+    clearBtn.disabled = !term;
   }
 
-  renderPersonalAccountsTable(personalAccountsVisibleRows);
-  const summaryEl = document.getElementById('personal-accounts-summary');
-  if (summaryEl) {
-    renderPersonalAccountsSummary(personalAccountsVisibleRows, summaryEl);
-  }
+  const filteredRows = filterPersonalAccountsRows(personalAccountsCachedRows, term);
+
+  applyPersonalAccountsVisibleRows(filteredRows);
 }
 
 window.loadPersonalAccountsData = loadPersonalAccountsData;

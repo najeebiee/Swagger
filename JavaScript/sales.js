@@ -13,7 +13,7 @@ const salesColumns = [
   { key: 'transdate',  label: 'Transdate' }
 ];
 
-let salesAllRows = [];
+let salesCachedRows = [];
 let salesVisibleRows = [];
 
 function getSalesApiKey() {
@@ -65,10 +65,31 @@ function renderSalesTable(rows) {
   renderTable(tableContainer, salesColumns, rows);
 }
 
+function applySalesVisibleRows(visibleRows) {
+  salesVisibleRows = Array.isArray(visibleRows) ? visibleRows : [];
+
+  const summaryEl = document.getElementById('sales-summary');
+
+  renderSalesSummary(salesVisibleRows, summaryEl);
+  renderSalesTable(salesVisibleRows);
+}
+
+function filterSalesRows(rows, term) {
+  if (!term) return rows.slice();
+
+  const lowered = term.toLowerCase();
+
+  return rows.filter((row) =>
+    salesColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(lowered))
+  );
+}
+
 // DATA LOADING
 async function loadSalesData({ df, dt }) {
   const tableContainer = document.getElementById('sales-table-container');
   const summaryEl      = document.getElementById('sales-summary');
+  const tableSearchInput = document.getElementById('sales-table-search');
+  const tableSearchClear = document.getElementById('sales-table-search-clear');
 
   if (tableContainer) {
     tableContainer.innerHTML = '<div class="empty-state">Loading sales data...</div>';
@@ -88,10 +109,10 @@ async function loadSalesData({ df, dt }) {
       console.warn(`API call returned 0 sales for date range: ${df} to ${dt}.`);
     }
 
-    salesAllRows = rows;
-    salesVisibleRows = rows;
-    renderSalesSummary(salesVisibleRows, summaryEl);
-    renderSalesTable(salesVisibleRows);
+    salesCachedRows = rows;
+    if (tableSearchInput) tableSearchInput.value = '';
+    if (tableSearchClear) tableSearchClear.disabled = true;
+    applySalesVisibleRows(salesCachedRows);
     return rows;
   } catch (err) {
     console.error('Failed to load sales data', err);
@@ -102,6 +123,8 @@ async function loadSalesData({ df, dt }) {
     if (summaryEl) {
       summaryEl.innerHTML = '';
     }
+    salesCachedRows = [];
+    applySalesVisibleRows([]);
     return [];
   }
 }
@@ -112,6 +135,7 @@ function initSalesPage() {
   const toInput   = document.getElementById('sales-to');
   const filterForm  = document.getElementById('sales-filter-form');
   const tableSearchInput = document.getElementById('sales-table-search');
+  const tableSearchClear = document.getElementById('sales-table-search-clear');
   const exportCsvBtn = document.getElementById('sales-export-csv');
   const exportXlsxBtn = document.getElementById('sales-export-xlsx');
   const exportPdfBtn = document.getElementById('sales-export-pdf');
@@ -136,6 +160,15 @@ function initSalesPage() {
 
   if (tableSearchInput) {
     tableSearchInput.addEventListener('input', applySalesTableSearch);
+  }
+
+  if (tableSearchClear) {
+    tableSearchClear.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (tableSearchInput) tableSearchInput.value = '';
+      tableSearchClear.disabled = true;
+      applySalesVisibleRows(salesCachedRows);
+    });
   }
 
   if (exportCsvBtn) {
@@ -171,20 +204,19 @@ function initSalesPage() {
 function applySalesTableSearch() {
   const summaryEl = document.getElementById('sales-summary');
   const input = document.getElementById('sales-table-search');
+  const clearBtn = document.getElementById('sales-table-search-clear');
   if (!input) return;
 
-  const term = input.value.trim().toLowerCase();
+  const term = input.value.trim();
 
-  if (!term) {
-    salesVisibleRows = salesAllRows.slice();
-  } else {
-    salesVisibleRows = salesAllRows.filter((row) =>
-      salesColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(term))
-    );
+  if (clearBtn) {
+    clearBtn.disabled = !term;
   }
 
-  renderSalesSummary(salesVisibleRows, summaryEl);
-  renderSalesTable(salesVisibleRows);
+  const filteredRows = filterSalesRows(salesCachedRows, term);
+
+  renderSalesSummary(filteredRows, summaryEl);
+  renderSalesTable(filteredRows);
 }
 
 window.loadSalesData = loadSalesData;

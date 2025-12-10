@@ -20,13 +20,23 @@
     <div class="table-toolbar-left">
       <label class="table-search-label">
         Table search
-        <input
-          type="text"
-          id="sales-table-search"
-          class="table-search-input"
-          placeholder="Search in current results…"
-          aria-label="Search in table"
-        />
+        <div class="table-search-row">
+          <input
+            type="text"
+            id="sales-table-search"
+            class="table-search-input"
+            placeholder="Search in current results…"
+            aria-label="Search in table"
+          />
+          <button
+            type="button"
+            id="sales-table-search-clear"
+            class="table-search-clear-btn"
+            disabled
+          >
+            Clear
+          </button>
+        </div>
       </label>
     </div>
     <div class="table-toolbar-right">

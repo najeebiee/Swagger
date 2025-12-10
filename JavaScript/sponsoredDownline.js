@@ -11,7 +11,7 @@ const sponsoredDownlineColumns = [
   { key: 'payment',      label: 'PAYMENT' }
 ];
 
-let sponsoredDownlineAllRows = [];
+let sponsoredDownlineCachedRows = [];
 let sponsoredDownlineVisibleRows = [];
 
 function getSponsoredDownlineApiKey() {
@@ -46,10 +46,32 @@ function renderSponsoredDownlineTable(rows) {
   renderTable(tableContainer, sponsoredDownlineColumns, rows);
 }
 
+function applySponsoredDownlineVisibleRows(visibleRows) {
+  sponsoredDownlineVisibleRows = Array.isArray(visibleRows) ? visibleRows : [];
+
+  const summaryEl = document.getElementById('sponsored-downline-summary');
+
+  renderSponsoredDownlineSummary(sponsoredDownlineVisibleRows, summaryEl);
+  renderSponsoredDownlineTable(sponsoredDownlineVisibleRows);
+}
+
+function filterSponsoredDownlineRows(rows, term) {
+  if (!term) return rows.slice();
+
+  const lowered = term.toLowerCase();
+
+  return rows.filter((row) =>
+    sponsoredDownlineColumns.some((col) =>
+      String(row[col.key] ?? '').toLowerCase().includes(lowered)
+    )
+  );
+}
+
 // DATA LOADING – always call the API (like your "proper" user upline)
 async function loadSponsoredDownlineData({ username }) {
   const tableContainer = document.getElementById('sponsored-downline-table-container');
-  const summaryEl      = document.getElementById('sponsored-downline-summary');
+  const tableSearchInput = document.getElementById('sponsored-downline-table-search');
+  const tableSearchClear = document.getElementById('sponsored-downline-table-search-clear');
 
   if (tableContainer) {
     tableContainer.innerHTML =
@@ -80,10 +102,11 @@ async function loadSponsoredDownlineData({ username }) {
       console.warn('No sponsored downline data found for username:', username || '(root)');
     }
 
-    sponsoredDownlineAllRows = rows;
-    sponsoredDownlineVisibleRows = rows;
-    renderSponsoredDownlineSummary(sponsoredDownlineVisibleRows, summaryEl);
-    renderSponsoredDownlineTable(sponsoredDownlineVisibleRows);
+    sponsoredDownlineCachedRows = rows;
+    if (tableSearchInput) tableSearchInput.value = '';
+    if (tableSearchClear) tableSearchClear.disabled = true;
+
+    applySponsoredDownlineVisibleRows(sponsoredDownlineCachedRows);
     return rows;
   } catch (error) {
     console.error('Failed to load sponsored downline data', error);
@@ -91,7 +114,7 @@ async function loadSponsoredDownlineData({ username }) {
       tableContainer.innerHTML =
         '<div class="empty-state">Sorry, we could not load the sponsored downline data. Please try again.</div>';
     }
-    if (summaryEl) summaryEl.innerHTML = '';
+    applySponsoredDownlineVisibleRows([]);
     return [];
   }
 }
@@ -101,6 +124,7 @@ function initSponsoredDownlinePage() {
   const usernameInput = document.getElementById('sponsored-downline-username');
   const filterForm    = document.getElementById('sponsored-downline-filter-form');
   const tableSearchInput = document.getElementById('sponsored-downline-table-search');
+  const tableSearchClear = document.getElementById('sponsored-downline-table-search-clear');
   const exportCsvBtn = document.getElementById('sponsored-downline-export-csv');
   const exportXlsxBtn = document.getElementById('sponsored-downline-export-xlsx');
   const exportPdfBtn = document.getElementById('sponsored-downline-export-pdf');
@@ -115,6 +139,15 @@ function initSponsoredDownlinePage() {
 
   if (tableSearchInput) {
     tableSearchInput.addEventListener('input', applySponsoredDownlineTableSearch);
+  }
+
+  if (tableSearchClear) {
+    tableSearchClear.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (tableSearchInput) tableSearchInput.value = '';
+      tableSearchClear.disabled = true;
+      applySponsoredDownlineVisibleRows(sponsoredDownlineCachedRows);
+    });
   }
 
   if (exportCsvBtn) {
@@ -158,22 +191,19 @@ function initSponsoredDownlinePage() {
 }
 
 function applySponsoredDownlineTableSearch() {
-  const summaryEl = document.getElementById('sponsored-downline-summary');
   const input = document.getElementById('sponsored-downline-table-search');
+  const clearBtn = document.getElementById('sponsored-downline-table-search-clear');
   if (!input) return;
 
-  const term = input.value.trim().toLowerCase();
+  const term = input.value.trim();
 
-  if (!term) {
-    sponsoredDownlineVisibleRows = sponsoredDownlineAllRows.slice();
-  } else {
-    sponsoredDownlineVisibleRows = sponsoredDownlineAllRows.filter((row) =>
-      sponsoredDownlineColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(term))
-    );
+  if (clearBtn) {
+    clearBtn.disabled = !term;
   }
 
-  renderSponsoredDownlineSummary(sponsoredDownlineVisibleRows, summaryEl);
-  renderSponsoredDownlineTable(sponsoredDownlineVisibleRows);
+  const filteredRows = filterSponsoredDownlineRows(sponsoredDownlineCachedRows, term);
+
+  applySponsoredDownlineVisibleRows(filteredRows);
 }
 
 window.loadSponsoredDownlineData = loadSponsoredDownlineData;

@@ -11,7 +11,7 @@ const unilevelUplineColumns = [
   { key: 'payment',      label: 'PAYMENT' }
 ];
 
-let unilevelUplineAllRows = [];
+let unilevelUplineCachedRows = [];
 let unilevelUplineVisibleRows = [];
 
 function getUnilevelUplineApiKey() {
@@ -46,10 +46,35 @@ function renderUnilevelUplineTable(rows) {
   renderTable(tableContainer, unilevelUplineColumns, rows);
 }
 
+function applyUnilevelUplineVisibleRows(visibleRows) {
+  unilevelUplineVisibleRows = Array.isArray(visibleRows) ? visibleRows : [];
+
+  const summaryEl = document.getElementById('unilevel-upline-summary');
+
+  renderUnilevelUplineTable(unilevelUplineVisibleRows);
+  if (summaryEl) {
+    renderUnilevelUplineSummary(unilevelUplineVisibleRows, summaryEl);
+  }
+}
+
+function filterUnilevelUplineRows(rows, term) {
+  if (!term) return rows.slice();
+
+  const lowered = term.toLowerCase();
+
+  return rows.filter((row) =>
+    unilevelUplineColumns.some((col) => {
+      const value = row[col.key];
+      return value && String(value).toLowerCase().includes(lowered);
+    })
+  );
+}
+
 // DATA LOADING – always call the API (like your "proper" user upline)
 async function loadUnilevelUplineData({ username }) {
   const tableContainer = document.getElementById('unilevel-upline-table-container');
-  const summaryEl      = document.getElementById('unilevel-upline-summary');
+  const tableSearchInput = document.getElementById('unilevel-upline-table-search');
+  const tableSearchClear = document.getElementById('unilevel-upline-table-search-clear');
 
   if (tableContainer) {
     tableContainer.innerHTML =
@@ -80,10 +105,10 @@ async function loadUnilevelUplineData({ username }) {
       console.warn('No unilevel upline data found for username:', username || '(root)');
     }
 
-    unilevelUplineAllRows = rows;
-    unilevelUplineVisibleRows = rows;
-    renderUnilevelUplineSummary(unilevelUplineVisibleRows, summaryEl);
-    renderUnilevelUplineTable(unilevelUplineVisibleRows);
+    unilevelUplineCachedRows = rows;
+    if (tableSearchInput) tableSearchInput.value = '';
+    if (tableSearchClear) tableSearchClear.disabled = true;
+    applyUnilevelUplineVisibleRows(unilevelUplineCachedRows);
     return rows;
   } catch (error) {
     console.error('Failed to load unilevel upline data', error);
@@ -91,7 +116,7 @@ async function loadUnilevelUplineData({ username }) {
       tableContainer.innerHTML =
         '<div class="empty-state">Sorry, we could not load the unilevel upline data. Please try again.</div>';
     }
-    if (summaryEl) summaryEl.innerHTML = '';
+    applyUnilevelUplineVisibleRows([]);
     return [];
   }
 }
@@ -101,6 +126,7 @@ function initUnilevelUplinePage() {
   const usernameInput = document.getElementById('unilevel-upline-username');
   const filterForm    = document.getElementById('unilevel-upline-filter-form');
   const tableSearchInput = document.getElementById('unilevel-upline-table-search');
+  const tableSearchClear = document.getElementById('unilevel-upline-table-search-clear');
   const exportCsvBtn = document.getElementById('unilevel-upline-export-csv');
   const exportXlsxBtn = document.getElementById('unilevel-upline-export-xlsx');
   const exportPdfBtn = document.getElementById('unilevel-upline-export-pdf');
@@ -115,6 +141,15 @@ function initUnilevelUplinePage() {
 
   if (tableSearchInput) {
     tableSearchInput.addEventListener('input', applyUnilevelUplineTableSearch);
+  }
+
+  if (tableSearchClear) {
+    tableSearchClear.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (tableSearchInput) tableSearchInput.value = '';
+      tableSearchClear.disabled = true;
+      applyUnilevelUplineVisibleRows(unilevelUplineCachedRows);
+    });
   }
 
   if (exportCsvBtn) {
@@ -159,24 +194,16 @@ function initUnilevelUplinePage() {
 
 function applyUnilevelUplineTableSearch() {
   const input = document.getElementById('unilevel-upline-table-search');
-  const term = input ? input.value.trim().toLowerCase() : '';
+  const clearBtn = document.getElementById('unilevel-upline-table-search-clear');
+  const term = input ? input.value.trim() : '';
 
-  if (!term) {
-    unilevelUplineVisibleRows = unilevelUplineAllRows.slice();
-  } else {
-    unilevelUplineVisibleRows = unilevelUplineAllRows.filter((row) =>
-      unilevelUplineColumns.some((col) => {
-        const value = row[col.key];
-        return value && String(value).toLowerCase().includes(term);
-      })
-    );
+  if (clearBtn) {
+    clearBtn.disabled = !term;
   }
 
-  renderUnilevelUplineTable(unilevelUplineVisibleRows);
-  const summaryEl = document.getElementById('unilevel-upline-summary');
-  if (summaryEl) {
-    renderUnilevelUplineSummary(unilevelUplineVisibleRows, summaryEl);
-  }
+  const filteredRows = filterUnilevelUplineRows(unilevelUplineCachedRows, term);
+
+  applyUnilevelUplineVisibleRows(filteredRows);
 }
 
 window.loadUnilevelUplineData = loadUnilevelUplineData;

@@ -19,13 +19,23 @@
     <div class="table-toolbar-left">
       <label class="table-search-label">
         Table search
-        <input
-          type="text"
-          id="unilevel-upline-table-search"
-          class="table-search-input"
-          placeholder="Search in current results…"
-          aria-label="Search in Unilevel Upline table"
-        />
+        <div class="table-search-row">
+          <input
+            type="text"
+            id="unilevel-upline-table-search"
+            class="table-search-input"
+            placeholder="Search in current results…"
+            aria-label="Search in Unilevel Upline table"
+          />
+          <button
+            type="button"
+            id="unilevel-upline-table-search-clear"
+            class="table-search-clear-btn"
+            disabled
+          >
+            Clear
+          </button>
+        </div>
       </label>
     </div>
     <div class="table-toolbar-right">

@@ -284,8 +284,21 @@ button:active {
   font-size: 0.82rem;
 }
 
+.table-search-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .table-search-input {
   max-width: 260px;
+}
+
+.table-search-clear-btn {
+  border-color: var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
 }
 
 /* Export pill buttons */

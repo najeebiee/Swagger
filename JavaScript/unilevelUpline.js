@@ -2,7 +2,17 @@
 const UNILEVEL_UPLINE_API_USER = 'ggitteam';
 const UNILEVEL_UPLINE_ENDPOINT = '/api/unilevelUpline';
 
-let unilevelUplineRowsCache = [];
+const unilevelUplineColumns = [
+  { key: 'idno',         label: 'ID NO' },
+  { key: 'registered',   label: 'REGISTERED' },
+  { key: 'user_name',    label: 'USER NAME' },
+  { key: 'user',         label: 'USER' },
+  { key: 'account_type', label: 'ACCOUNT TYPE' },
+  { key: 'payment',      label: 'PAYMENT' }
+];
+
+let unilevelUplineAllRows = [];
+let unilevelUplineVisibleRows = [];
 
 function getUnilevelUplineApiKey() {
   return generateApiKey(); // same helper as other pages
@@ -32,16 +42,8 @@ function renderUnilevelUplineSummary(rows, summaryEl) {
 // TABLE (uses shared renderTable from common.js)
 function renderUnilevelUplineTable(rows) {
   const tableContainer = document.getElementById('unilevel-upline-table-container');
-  const columns = [
-    { key: 'idno',         label: 'ID NO' },
-    { key: 'registered',   label: 'REGISTERED' },
-    { key: 'user_name',    label: 'USER NAME' },
-    { key: 'user',         label: 'USER' },
-    { key: 'account_type', label: 'ACCOUNT TYPE' },
-    { key: 'payment',      label: 'PAYMENT' }
-  ];
 
-  renderTable(tableContainer, columns, rows);
+  renderTable(tableContainer, unilevelUplineColumns, rows);
 }
 
 // DATA LOADING – always call the API (like your "proper" user upline)
@@ -78,9 +80,10 @@ async function loadUnilevelUplineData({ username }) {
       console.warn('No unilevel upline data found for username:', username || '(root)');
     }
 
-    unilevelUplineRowsCache = rows;
-    renderUnilevelUplineSummary(rows, summaryEl);
-    renderUnilevelUplineTable(rows);
+    unilevelUplineAllRows = rows;
+    unilevelUplineVisibleRows = rows;
+    renderUnilevelUplineSummary(unilevelUplineVisibleRows, summaryEl);
+    renderUnilevelUplineTable(unilevelUplineVisibleRows);
     return rows;
   } catch (error) {
     console.error('Failed to load unilevel upline data', error);
@@ -98,6 +101,9 @@ function initUnilevelUplinePage() {
   const usernameInput = document.getElementById('unilevel-upline-username');
   const filterForm    = document.getElementById('unilevel-upline-filter-form');
   const tableSearchInput = document.getElementById('unilevel-upline-table-search');
+  const exportCsvBtn = document.getElementById('unilevel-upline-export-csv');
+  const exportXlsxBtn = document.getElementById('unilevel-upline-export-xlsx');
+  const exportPdfBtn = document.getElementById('unilevel-upline-export-pdf');
 
   if (filterForm) {
     filterForm.addEventListener('submit', (event) => {
@@ -108,26 +114,69 @@ function initUnilevelUplinePage() {
   }
 
   if (tableSearchInput) {
-    tableSearchInput.addEventListener('input', () => {
-      const term = tableSearchInput.value.trim().toLowerCase();
+    tableSearchInput.addEventListener('input', applyUnilevelUplineTableSearch);
+  }
 
-      const rows = !term
-        ? unilevelUplineRowsCache
-        : unilevelUplineRowsCache.filter((row) =>
-            [
-              'user_name',
-              'user',
-              'account_type',
-              'payment'
-            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
-          );
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener('click', () => {
+      confirmExport('csv', () => {
+        window.exportRowsToCsv(
+          unilevelUplineColumns,
+          unilevelUplineVisibleRows,
+          'unilevel-upline.csv'
+        );
+        showExportSuccess('csv');
+      });
+    });
+  }
 
-      renderUnilevelUplineTable(rows);
+  if (exportXlsxBtn) {
+    exportXlsxBtn.addEventListener('click', () => {
+      confirmExport('xlsx', () => {
+        window.exportRowsToXlsx(
+          unilevelUplineColumns,
+          unilevelUplineVisibleRows,
+          'unilevel-upline.xlsx'
+        );
+        showExportSuccess('xlsx');
+      });
+    });
+  }
+
+  if (exportPdfBtn) {
+    exportPdfBtn.addEventListener('click', () => {
+      window.exportTableToPdf(
+        unilevelUplineColumns,
+        unilevelUplineVisibleRows,
+        'Unilevel Upline'
+      );
     });
   }
 
   // Initial load with NO username → backend uses ROOT_UPLINE_HASH
   loadUnilevelUplineData({ username: '' });
+}
+
+function applyUnilevelUplineTableSearch() {
+  const input = document.getElementById('unilevel-upline-table-search');
+  const term = input ? input.value.trim().toLowerCase() : '';
+
+  if (!term) {
+    unilevelUplineVisibleRows = unilevelUplineAllRows.slice();
+  } else {
+    unilevelUplineVisibleRows = unilevelUplineAllRows.filter((row) =>
+      unilevelUplineColumns.some((col) => {
+        const value = row[col.key];
+        return value && String(value).toLowerCase().includes(term);
+      })
+    );
+  }
+
+  renderUnilevelUplineTable(unilevelUplineVisibleRows);
+  const summaryEl = document.getElementById('unilevel-upline-summary');
+  if (summaryEl) {
+    renderUnilevelUplineSummary(unilevelUplineVisibleRows, summaryEl);
+  }
 }
 
 window.loadUnilevelUplineData = loadUnilevelUplineData;

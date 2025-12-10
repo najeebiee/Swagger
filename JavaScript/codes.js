@@ -2,7 +2,25 @@
 const CODES_API_USER = 'ggitteam';
 const CODES_ENDPOINT = '/api/codes';
 
-let codesRowsCache = [];
+const codesColumns = [
+  { key: 'owner_user_name',    label: 'Owner User Name' },
+  { key: 'owner_name',         label: 'Owner Name' },
+  { key: 'code_status',        label: 'Code Status' },
+  { key: 'sponsor_id',         label: 'Sponsor ID' },
+  { key: 'sponsor_login_name', label: 'Sponsor Login Name'},
+  { key: 'sponsor_name',       label: 'Sponsor Name'},
+  { key: 'used_by_user_name',  label: 'Used By User Name'},
+  { key: 'used_by_name',       label: 'Used By Name'},
+  { key: 'code_sku',           label: 'Code SKU'},
+  { key: 'code_payment',       label: 'Code Payment'},
+  { key: 'code',               label: 'Code'},
+  { key: 'code_amount',        label: 'Code Amount'},
+  { key: 'code_pin',           label: 'Code PIN'},
+  { key: 'code_date_created',  label: 'Code Date Created'},
+];
+
+let codesAllRows = [];
+let codesVisibleRows = [];
 
 function getCodesApiKey() {
   return generateApiKey();
@@ -34,28 +52,11 @@ function renderCodesTable(rows) {
   const tableContainer = document.getElementById('codes-table-container');
   if (!tableContainer) return;
 
-  const columns = [
-    { key: 'owner_user_name',    label: 'Owner User Name' },
-    { key: 'owner_name',         label: 'Owner Name' },
-    { key: 'code_status',        label: 'Code Status' },
-    { key: 'sponsor_id',         label: 'Sponsor ID' },
-    { key: 'sponsor_login_name', label: 'Sponsor Login Name'},
-    { key: 'sponsor_name',       label: 'Sponsor Name'},
-    { key: 'used_by_user_name',  label: 'Used By User Name'},
-    { key: 'used_by_name',       label: 'Used By Name'},
-    { key: 'code_sku',           label: 'Code SKU'},
-    { key: 'code_payment',       label: 'Code Payment'},
-    { key: 'code',               label: 'Code'},
-    { key: 'code_amount',        label: 'Code Amount'},
-    { key: 'code_pin',           label: 'Code PIN'},
-    { key: 'code_date_created',  label: 'Code Date Created'},
-  ];
-
-  renderTable(tableContainer, columns, rows);
+  renderTable(tableContainer, codesColumns, rows);
 }
 
 // DATA LOADING
-async function loadCodesData({ df, dt, search }) {
+async function loadCodesData({ df, dt }) {
   const summaryEl      = document.getElementById('codes-summary');
   const tableContainer = document.getElementById('codes-table-container');
 
@@ -81,9 +82,10 @@ async function loadCodesData({ df, dt, search }) {
       console.warn(`API call returned 0 codes for date range: ${df} to ${dt}.`);
     }
 
-    codesRowsCache = rows;
-    renderCodesSummary(rows, summaryEl);
-    renderCodesTable(rows);
+    codesAllRows = rows;
+    codesVisibleRows = rows;
+    renderCodesSummary(codesVisibleRows, summaryEl);
+    renderCodesTable(codesVisibleRows);
   } catch (err) {
     console.error('Failed to load codes', err);
     if (tableContainer) {
@@ -98,11 +100,13 @@ async function loadCodesData({ df, dt, search }) {
 
 // PAGE INIT
 function initCodesPage() {
-  const searchInput = document.getElementById('codes-search');
   const fromInput   = document.getElementById('codes-from');
   const toInput     = document.getElementById('codes-to');
   const filterForm  = document.getElementById('codes-filter-form');
   const tableSearchInput = document.getElementById('codes-table-search');
+  const exportCsvBtn = document.getElementById('codes-export-csv');
+  const exportXlsxBtn = document.getElementById('codes-export-xlsx');
+  const exportPdfBtn = document.getElementById('codes-export-pdf');
 
   const { from, to } = getDefaultDateRange();
   if (fromInput && !fromInput.value) fromInput.value = from;
@@ -113,9 +117,8 @@ function initCodesPage() {
       e.preventDefault();
       const df = formatDateForApi(fromInput?.value);
       const dt = formatDateForApi(toInput?.value);
-      const search = searchInput?.value || '';
 
-      loadCodesData({ df, dt, search });
+      loadCodesData({ df, dt });
     });
   }
 
@@ -125,31 +128,56 @@ function initCodesPage() {
   }
 
   if (tableSearchInput) {
-    tableSearchInput.addEventListener('input', () => {
-      const term = tableSearchInput.value.trim().toLowerCase();
+    tableSearchInput.addEventListener('input', applyCodesTableSearch);
+  }
 
-      const rows = !term
-        ? codesRowsCache
-        : codesRowsCache.filter((row) =>
-            [
-              'owner_user_name',
-              'owner_name',
-              'code',
-              'code_status',
-              'used_by_user_name',
-              'sponsor_login_name'
-            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
-          );
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener('click', () => {
+      confirmExport('csv', () => {
+        exportRowsToCsv(codesColumns, codesVisibleRows, 'codes.csv');
+        showExportSuccess('csv');
+      });
+    });
+  }
 
-      renderCodesTable(rows);
+  if (exportXlsxBtn) {
+    exportXlsxBtn.addEventListener('click', () => {
+      confirmExport('xlsx', () => {
+        exportRowsToXlsx(codesColumns, codesVisibleRows, 'codes.xlsx');
+        showExportSuccess('xlsx');
+      });
+    });
+  }
+
+  if (exportPdfBtn) {
+    exportPdfBtn.addEventListener('click', () => {
+      exportTableToPdf(codesColumns, codesVisibleRows, 'Codes');
     });
   }
 
   const initialDf     = formatDateForApi(fromInput.value);
   const initialDt     = formatDateForApi(toInput.value);
-  const initialSearch = searchInput?.value || '';
 
-  loadCodesData({ df: initialDf, dt: initialDt, search: initialSearch });
+  loadCodesData({ df: initialDf, dt: initialDt });
+}
+
+function applyCodesTableSearch() {
+  const summaryEl = document.getElementById('codes-summary');
+  const input = document.getElementById('codes-table-search');
+  if (!input) return;
+
+  const term = input.value.trim().toLowerCase();
+
+  if (!term) {
+    codesVisibleRows = codesAllRows.slice();
+  } else {
+    codesVisibleRows = codesAllRows.filter((row) =>
+      codesColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(term))
+    );
+  }
+
+  renderCodesSummary(codesVisibleRows, summaryEl);
+  renderCodesTable(codesVisibleRows);
 }
 
 window.initCodesPage = initCodesPage;

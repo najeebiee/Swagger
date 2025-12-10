@@ -14,15 +14,31 @@
       <input id="users-to" type="date" aria-label="To date" required />
     </label>
     <button type="submit">Apply</button>
-    <input
-      id="users-table-search"
-      type="text"
-      class="toolbar-search"
-      placeholder="Search in table..."
-      aria-label="Search in loaded users"
-    />
   </form>
 
+  <div class="table-toolbar">
+    <div class="table-toolbar-left">
+      <label class="table-search-label">
+        Table search
+        <input
+          type="text"
+          id="users-table-search"
+          class="table-search-input"
+          placeholder="Search in current results…"
+          aria-label="Search in table"
+        />
+      </label>
+    </div>
+
+    <div class="table-toolbar-right">
+      <button type="button" id="users-export-csv" class="export-btn">CSV</button>
+      <button type="button" id="users-export-xlsx" class="export-btn">Excel</button>
+      <button type="button" id="users-export-pdf" class="export-btn">PDF</button>
+    </div>
+  </div>
+
   <div id="users-summary" class="page-summary"></div>
-  <div id="users-table-container" class="table-container"></div>
+  <div class="table-wrapper">
+    <div id="users-table-container" class="table-container"></div>
+  </div>
 </section>

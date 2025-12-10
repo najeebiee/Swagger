@@ -2,7 +2,19 @@
 const SALES_API_USER = 'ggitteam';
 const SALES_ENDPOINT = '/api/sales';
 
-let salesRowsCache = [];
+const salesColumns = [
+  { key: 'store_name', label: 'Store Name' },
+  { key: 'store_type', label: 'Store Type' },
+  { key: 'user',       label: 'User' },
+  { key: 'user_name',  label: 'User Name' },
+  { key: 'code_sku',   label: 'Code SKU' },
+  { key: 'amount',     label: 'Amount' },
+  { key: 'qty',        label: 'Qty' },
+  { key: 'transdate',  label: 'Transdate' }
+];
+
+let salesAllRows = [];
+let salesVisibleRows = [];
 
 function getSalesApiKey() {
   return generateApiKey();
@@ -49,18 +61,8 @@ function renderSalesSummary(rows, summaryEl) {
 // TABLE WRAPPER
 function renderSalesTable(rows) {
   const tableContainer = document.getElementById('sales-table-container');
-  const columns = [
-    { key: 'store_name', label: 'Store Name' },
-    { key: 'store_type', label: 'Store Type' },
-    { key: 'user',       label: 'User' },
-    { key: 'user_name',  label: 'User Name' },
-    { key: 'code_sku',   label: 'Code SKU' },
-    { key: 'amount',     label: 'Amount' },
-    { key: 'qty',        label: 'Qty' },
-    { key: 'transdate',  label: 'Transdate' }
-  ];
 
-  renderTable(tableContainer, columns, rows);
+  renderTable(tableContainer, salesColumns, rows);
 }
 
 // DATA LOADING
@@ -86,9 +88,10 @@ async function loadSalesData({ df, dt }) {
       console.warn(`API call returned 0 sales for date range: ${df} to ${dt}.`);
     }
 
-    salesRowsCache = rows;
-    renderSalesSummary(rows, summaryEl);
-    renderSalesTable(rows);
+    salesAllRows = rows;
+    salesVisibleRows = rows;
+    renderSalesSummary(salesVisibleRows, summaryEl);
+    renderSalesTable(salesVisibleRows);
     return rows;
   } catch (err) {
     console.error('Failed to load sales data', err);
@@ -105,11 +108,13 @@ async function loadSalesData({ df, dt }) {
 
 // PAGE INIT
 function initSalesPage() {
-  const searchInput = document.getElementById('sales-search');
   const fromInput = document.getElementById('sales-from');
   const toInput   = document.getElementById('sales-to');
   const filterForm  = document.getElementById('sales-filter-form');
   const tableSearchInput = document.getElementById('sales-table-search');
+  const exportCsvBtn = document.getElementById('sales-export-csv');
+  const exportXlsxBtn = document.getElementById('sales-export-xlsx');
+  const exportPdfBtn = document.getElementById('sales-export-pdf');
 
   const { from, to } = getDefaultDateRange();
   if (fromInput && !fromInput.value) fromInput.value = from;
@@ -130,30 +135,56 @@ function initSalesPage() {
   }
 
   if (tableSearchInput) {
-    tableSearchInput.addEventListener('input', () => {
-      const term = tableSearchInput.value.trim().toLowerCase();
+    tableSearchInput.addEventListener('input', applySalesTableSearch);
+  }
 
-      const rows = !term
-        ? salesRowsCache
-        : salesRowsCache.filter((row) =>
-            [
-              'store_name',
-              'store_type',
-              'user',
-              'user_name',
-              'code_sku'
-            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
-          );
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener('click', () => {
+      confirmExport('csv', () => {
+        exportRowsToCsv(salesColumns, salesVisibleRows, 'sales.csv');
+        showExportSuccess('csv');
+      });
+    });
+  }
 
-      renderSalesTable(rows);
+  if (exportXlsxBtn) {
+    exportXlsxBtn.addEventListener('click', () => {
+      confirmExport('xlsx', () => {
+        exportRowsToXlsx(salesColumns, salesVisibleRows, 'sales.xlsx');
+        showExportSuccess('xlsx');
+      });
+    });
+  }
+
+  if (exportPdfBtn) {
+    exportPdfBtn.addEventListener('click', () => {
+      exportTableToPdf(salesColumns, salesVisibleRows, 'Sales');
     });
   }
 
   const initialDf = formatDateForApi(fromInput.value);
   const initialDt = formatDateForApi(toInput.value);
-  const initialSearch = searchInput?.value || '';
 
-  loadSalesData({ df: initialDf, dt: initialDt, search: initialSearch });
+  loadSalesData({ df: initialDf, dt: initialDt });
+}
+
+function applySalesTableSearch() {
+  const summaryEl = document.getElementById('sales-summary');
+  const input = document.getElementById('sales-table-search');
+  if (!input) return;
+
+  const term = input.value.trim().toLowerCase();
+
+  if (!term) {
+    salesVisibleRows = salesAllRows.slice();
+  } else {
+    salesVisibleRows = salesAllRows.filter((row) =>
+      salesColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(term))
+    );
+  }
+
+  renderSalesSummary(salesVisibleRows, summaryEl);
+  renderSalesTable(salesVisibleRows);
 }
 
 window.loadSalesData = loadSalesData;

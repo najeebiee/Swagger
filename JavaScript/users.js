@@ -2,7 +2,23 @@
 const USERS_API_USER = 'ggitteam';
 const USERS_ENDPOINT = '/api/users';
 
-let usersRowsCache = [];
+const userColumns = [
+  { key: 'user_name',    label: 'Username' },
+  { key: 'name',         label: 'Name' },
+  { key: 'sponsored',    label: 'Sponsored By' },
+  { key: 'placement',    label: 'Placement' },
+  { key: 'group',        label: 'Group' },
+  { key: 'account_type', label: 'Account Type' },
+  { key: 'date_created', label: 'Date Created' },
+  { key: 'region',       label: 'Region' },
+  { key: 'province',     label: 'Province' },
+  { key: 'city',         label: 'City' },
+  { key: 'brgy',         label: 'Barangay' },
+  { key: 'status',       label: 'Status' }
+];
+
+let usersAllRows = [];
+let usersVisibleRows = [];
 
 function getUsersApiKey() {
   return generateApiKey();
@@ -54,26 +70,11 @@ function renderUsersSummary(rows, summaryEl) {
 function renderUsersTable(rows) {
   const tableContainer = document.getElementById('users-table-container');
 
-  const columns = [
-    { key: 'user_name',    label: 'Username' },
-    { key: 'name',         label: 'Name' },
-    { key: 'sponsored',    label: 'Sponsored By' },
-    { key: 'placement',    label: 'Placement' },
-    { key: 'group',        label: 'Group' },
-    { key: 'account_type', label: 'Account Type' },
-    { key: 'date_created', label: 'Date Created' },
-    { key: 'region',       label: 'Region' },
-    { key: 'province',     label: 'Province' },
-    { key: 'city',         label: 'City' },
-    { key: 'brgy',         label: 'Barangay' },
-    { key: 'status',       label: 'Status' }
-  ];
-
-  renderTable(tableContainer, columns, rows);
+  renderTable(tableContainer, userColumns, rows);
 }
 
 // DATA LOADING
-async function loadUsersData({ df, dt, search }) {
+async function loadUsersData({ df, dt }) {
   const summaryEl      = document.getElementById('users-summary');
   const tableContainer = document.getElementById('users-table-container');
 
@@ -95,9 +96,11 @@ async function loadUsersData({ df, dt, search }) {
       console.warn(`API call returned 0 users for date range: ${df} to ${dt}.`);
     }
 
-    usersRowsCache = rows;
+    usersAllRows     = rows;
+    usersVisibleRows = rows;
+
     renderUsersSummary(rows, summaryEl);
-    renderUsersTable(rows);
+    renderUsersTable(usersVisibleRows);
   } catch (err) {
     console.error('Failed to load users', err);
     if (tableContainer) {
@@ -111,13 +114,35 @@ async function loadUsersData({ df, dt, search }) {
   }
 }
 
+function applyUsersTableSearch() {
+  const input = document.getElementById('users-table-search');
+  if (!input) return;
+
+  const term = input.value.trim().toLowerCase();
+
+  if (!term) {
+    usersVisibleRows = usersAllRows.slice();
+  } else {
+    usersVisibleRows = usersAllRows.filter((row) =>
+      userColumns.some((col) => {
+        const value = row[col.key];
+        return value && String(value).toLowerCase().includes(term);
+      })
+    );
+  }
+
+  renderUsersTable(usersVisibleRows);
+}
+
 // PAGE INIT
 function initUsersPage() {
-  const searchInput = document.getElementById('users-search');
   const fromInput   = document.getElementById('users-from');
   const toInput     = document.getElementById('users-to');
   const filterForm  = document.getElementById('users-filter-form');
-  const tableSearchInput = document.getElementById('users-table-search');
+  const tableSearch = document.getElementById('users-table-search');
+  const exportCsvBtn  = document.getElementById('users-export-csv');
+  const exportXlsxBtn = document.getElementById('users-export-xlsx');
+  const exportPdfBtn  = document.getElementById('users-export-pdf');
 
   const { from, to } = getDefaultDateRange();
   if (fromInput && !fromInput.value) fromInput.value = from;
@@ -128,8 +153,7 @@ function initUsersPage() {
       e.preventDefault();
       const df = formatDateForApi(fromInput?.value);
       const dt = formatDateForApi(toInput?.value);
-      const search = searchInput?.value || '';
-      loadUsersData({ df, dt, search });
+      loadUsersData({ df, dt });
     });
   }
 
@@ -138,32 +162,38 @@ function initUsersPage() {
     return;
   }
 
-  if (tableSearchInput) {
-    tableSearchInput.addEventListener('input', () => {
-      const term = tableSearchInput.value.trim().toLowerCase();
+  if (tableSearch) {
+    tableSearch.addEventListener('input', applyUsersTableSearch);
+  }
 
-      const rows = !term
-        ? usersRowsCache
-        : usersRowsCache.filter((row) =>
-            [
-              'user_name',
-              'name',
-              'sponsored',
-              'placement',
-              'account_type',
-              'status'
-            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
-          );
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener('click', () => {
+      confirmExport('csv', () => {
+        exportRowsToCsv(userColumns, usersVisibleRows, 'users.csv');
+        showExportSuccess('csv');
+      });
+    });
+  }
 
-      renderUsersTable(rows);
+  if (exportXlsxBtn) {
+    exportXlsxBtn.addEventListener('click', () => {
+      confirmExport('xlsx', () => {
+        exportRowsToXlsx(userColumns, usersVisibleRows, 'users.xlsx');
+        showExportSuccess('xlsx');
+      });
+    });
+  }
+
+  if (exportPdfBtn) {
+    exportPdfBtn.addEventListener('click', () => {
+      exportTableToPdf(userColumns, usersVisibleRows, 'Users');
     });
   }
 
   const initialDf      = formatDateForApi(fromInput.value);
   const initialDt      = formatDateForApi(toInput.value);
-  const initialSearch  = searchInput?.value || '';
 
-  loadUsersData({ df: initialDf, dt: initialDt, search: initialSearch });
+  loadUsersData({ df: initialDf, dt: initialDt });
 }
 
 window.initUsersPage = initUsersPage;

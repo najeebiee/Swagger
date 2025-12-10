@@ -469,6 +469,10 @@ tbody tr:hover {
     justify-content: flex-start;
   }
 
+  .table-toolbar-left {
+    flex: none;
+  }
+
   .table-search-input {
     max-width: 100%;
   }

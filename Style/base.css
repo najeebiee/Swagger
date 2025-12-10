@@ -22,6 +22,11 @@ body {
   color: var(--text);
 }
 
+html,
+body {
+  overflow-x: hidden; /* only tables should scroll horizontally */
+}
+
 /* --- Layout: App Shell --- */
 .app-shell {
   display: flex;
@@ -131,6 +136,7 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
   margin-top: 16px;
+  margin-bottom: 24px; /* add bottom spacing before the table */
 }
 
 .card {
@@ -229,9 +235,15 @@ button:active {
 
 /* --- Table Styles --- */
 .table-wrapper {
+  width: 100%;
   margin-top: 16px;
   overflow-x: auto; /* Allows horizontal scrolling on small screens */
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
+}
+
+.table-wrapper table {
+  min-width: 100%;
 }
 
 table {
@@ -241,7 +253,6 @@ table {
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
-  min-width: 700px; /* Ensure table columns don't compress too much */
 }
 
 table thead {
@@ -281,7 +292,91 @@ tbody tr:last-child td {
   margin-top: 16px;
 }
 
+/* Table toolbar: holds table search and export buttons */
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0 8px;
+}
+
+.table-toolbar-left {
+  flex: 1 1 220px;
+}
+
+.table-toolbar-right {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-search-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+  color: var(--muted); /* use existing muted text color if available */
+  font-size: 0.85rem;
+}
+
+.table-search-input {
+  max-width: 260px;
+}
+
+.export-btn {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: #fff;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+}
+
+.export-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+}
+
+.export-btn:active {
+  transform: translateY(1px);
+}
+
+.card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+}
+
+tbody tr:nth-child(odd) {
+  background: #fafbff;
+}
+
+tbody tr:hover {
+  background: rgba(79, 70, 229, 0.05);
+}
+
 /* --- Responsive Design for Mobile (<= 768px) --- */
+@media (max-width: 992px) {
+  .toolbar {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .toolbar label {
+    width: 100%;
+  }
+
+  .toolbar button[type="submit"] {
+    align-self: flex-start;
+  }
+}
+
 @media (max-width: 768px) {
   .app-shell {
     flex-direction: column;
@@ -331,13 +426,32 @@ tbody tr:last-child td {
   .page-title {
     font-size: 1.75rem;
   }
-  
+
   .page-subtitle {
     font-size: 0.9rem;
   }
 
-  /* Cards might look better in a single column on smallest devices */
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .table-toolbar-left,
+  .table-toolbar-right {
+    width: 100%;
+  }
+
+  .table-toolbar-right {
+    justify-content: flex-start;
+  }
+
+  .table-search-input {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
   .card-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* one card per row on small phones */
   }
 }

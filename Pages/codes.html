@@ -17,29 +17,28 @@
   </form>
 
   <div class="table-toolbar">
-    <label>
-      Table search
-      <input
-        type="text"
-        id="codes-table-search"
-        class="table-search-input"
-        placeholder="Search within current results…"
-        aria-label="Search in table"
-      />
-    </label>
-    <div class="table-actions">
-      <button type="button" id="codes-export-csv" class="table-export-button">
-        CSV
-      </button>
-      <button type="button" id="codes-export-xlsx" class="table-export-button">
-        Excel
-      </button>
-      <button type="button" id="codes-export-pdf" class="table-export-button">
-        PDF
-      </button>
+    <div class="table-toolbar-left">
+      <label class="table-search-label">
+        Table search
+        <input
+          type="text"
+          id="codes-table-search"
+          class="table-search-input"
+          placeholder="Search in current results…"
+          aria-label="Search in table"
+        />
+      </label>
+    </div>
+    <div class="table-toolbar-right">
+      <button type="button" id="codes-export-csv" class="export-btn">CSV</button>
+      <button type="button" id="codes-export-xlsx" class="export-btn">Excel</button>
+      <button type="button" id="codes-export-pdf" class="export-btn">PDF</button>
     </div>
   </div>
 
-  <div id="codes-summary" class="page-summary"></div>
-  <div id="codes-table-container" class="table-container"></div>
+  <div id="codes-summary" class="card-grid"></div>
+
+  <div class="table-wrapper">
+    <div id="codes-table-container" class="table-container"></div>
+  </div>
 </section>

@@ -13,14 +13,43 @@
              aria-label="Username for network activity lookup" />
     </label>
     <button type="submit">Apply</button>
-    <input
-      id="network-activity-table-search"
-      type="text"
-      class="toolbar-search"
-      placeholder="Search in table..."
-      aria-label="Search in loaded network activity"
-    />
   </form>
+
+  <div class="table-toolbar">
+    <label>
+      Table search
+      <input
+        type="text"
+        id="network-activity-table-search"
+        class="table-search-input"
+        placeholder="Search within current results…"
+        aria-label="Search in Network Activity table"
+      />
+    </label>
+    <div class="table-actions">
+      <button
+        type="button"
+        id="network-activity-export-csv"
+        class="table-export-button"
+      >
+        CSV
+      </button>
+      <button
+        type="button"
+        id="network-activity-export-xlsx"
+        class="table-export-button"
+      >
+        Excel
+      </button>
+      <button
+        type="button"
+        id="network-activity-export-pdf"
+        class="table-export-button"
+      >
+        PDF
+      </button>
+    </div>
+  </div>
 
   <div id="network-activity-summary" class="page-summary"></div>
   <div id="network-activity-table-container" class="table-container"></div>

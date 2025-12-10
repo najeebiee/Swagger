@@ -13,14 +13,43 @@
              aria-label="Username for dow lookup" />
     </label>
     <button type="submit">Apply</button>
-    <input
-      id="personal-accounts-table-search"
-      type="text"
-      class="toolbar-search"
-      placeholder="Search in table..."
-      aria-label="Search in loaded personal accounts"
-    />
   </form>
+
+  <div class="table-toolbar">
+    <label>
+      Table search
+      <input
+        type="text"
+        id="personal-accounts-table-search"
+        class="table-search-input"
+        placeholder="Search within current results…"
+        aria-label="Search in Personal Accounts table"
+      />
+    </label>
+    <div class="table-actions">
+      <button
+        type="button"
+        id="personal-accounts-export-csv"
+        class="table-export-button"
+      >
+        CSV
+      </button>
+      <button
+        type="button"
+        id="personal-accounts-export-xlsx"
+        class="table-export-button"
+      >
+        Excel
+      </button>
+      <button
+        type="button"
+        id="personal-accounts-export-pdf"
+        class="table-export-button"
+      >
+        PDF
+      </button>
+    </div>
+  </div>
 
   <div id="personal-accounts-summary" class="page-summary"></div>
   <div id="personal-accounts-table-container" class="table-container"></div>

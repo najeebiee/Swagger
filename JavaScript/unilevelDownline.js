@@ -2,7 +2,17 @@
 const UNILEVEL_DOWNLINE_API_USER = 'ggitteam';
 const UNILEVEL_DOWNLINE_ENDPOINT = '/api/unilevelDownline';
 
-let unilevelDownlineRowsCache = [];
+const unilevelDownlineColumns = [
+  { key: 'idno',         label: 'ID NO' },
+  { key: 'registered',   label: 'REGISTERED' },
+  { key: 'user_name',    label: 'USER NAME' },
+  { key: 'user',         label: 'USER' },
+  { key: 'account_type', label: 'ACCOUNT TYPE' },
+  { key: 'payment',      label: 'PAYMENT' }
+];
+
+let unilevelDownlineAllRows = [];
+let unilevelDownlineVisibleRows = [];
 
 function getUnilevelDownlineApiKey() {
   return generateApiKey(); // same helper as other pages
@@ -32,16 +42,8 @@ function renderUnilevelDownlineSummary(rows, summaryEl) {
 // TABLE (uses shared renderTable from common.js)
 function renderUnilevelDownlineTable(rows) {
   const tableContainer = document.getElementById('unilevel-downline-table-container');
-  const columns = [
-    { key: 'idno',         label: 'ID NO' },
-    { key: 'registered',   label: 'REGISTERED' },
-    { key: 'user_name',    label: 'USER NAME' },
-    { key: 'user',         label: 'USER' },
-    { key: 'account_type', label: 'ACCOUNT TYPE' },
-    { key: 'payment',      label: 'PAYMENT' }
-  ];
 
-  renderTable(tableContainer, columns, rows);
+  renderTable(tableContainer, unilevelDownlineColumns, rows);
 }
 
 // DATA LOADING – always call the API (like your "proper" user upline)
@@ -78,9 +80,10 @@ async function loadUnilevelDownlineData({ username }) {
       console.warn('No unilevel downline data found for username:', username || '(root)');
     }
 
-    unilevelDownlineRowsCache = rows;
-    renderUnilevelDownlineSummary(rows, summaryEl);
-    renderUnilevelDownlineTable(rows);
+    unilevelDownlineAllRows = rows;
+    unilevelDownlineVisibleRows = rows;
+    renderUnilevelDownlineSummary(unilevelDownlineVisibleRows, summaryEl);
+    renderUnilevelDownlineTable(unilevelDownlineVisibleRows);
     return rows;
   } catch (error) {
     console.error('Failed to load unilevel downline data', error);
@@ -98,6 +101,9 @@ function initUnilevelDownlinePage() {
   const usernameInput = document.getElementById('unilevel-downline-username');
   const filterForm    = document.getElementById('unilevel-downline-filter-form');
   const tableSearchInput = document.getElementById('unilevel-downline-table-search');
+  const exportCsvBtn = document.getElementById('unilevel-downline-export-csv');
+  const exportXlsxBtn = document.getElementById('unilevel-downline-export-xlsx');
+  const exportPdfBtn = document.getElementById('unilevel-downline-export-pdf');
 
   if (filterForm) {
     filterForm.addEventListener('submit', (event) => {
@@ -108,26 +114,69 @@ function initUnilevelDownlinePage() {
   }
 
   if (tableSearchInput) {
-    tableSearchInput.addEventListener('input', () => {
-      const term = tableSearchInput.value.trim().toLowerCase();
+    tableSearchInput.addEventListener('input', applyUnilevelDownlineTableSearch);
+  }
 
-      const rows = !term
-        ? unilevelDownlineRowsCache
-        : unilevelDownlineRowsCache.filter((row) =>
-            [
-              'user_name',
-              'user',
-              'account_type',
-              'payment'
-            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
-          );
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener('click', () => {
+      confirmExport('csv', () => {
+        window.exportRowsToCsv(
+          unilevelDownlineColumns,
+          unilevelDownlineVisibleRows,
+          'unilevel-downline.csv'
+        );
+        showExportSuccess('csv');
+      });
+    });
+  }
 
-      renderUnilevelDownlineTable(rows);
+  if (exportXlsxBtn) {
+    exportXlsxBtn.addEventListener('click', () => {
+      confirmExport('xlsx', () => {
+        window.exportRowsToXlsx(
+          unilevelDownlineColumns,
+          unilevelDownlineVisibleRows,
+          'unilevel-downline.xlsx'
+        );
+        showExportSuccess('xlsx');
+      });
+    });
+  }
+
+  if (exportPdfBtn) {
+    exportPdfBtn.addEventListener('click', () => {
+      window.exportTableToPdf(
+        unilevelDownlineColumns,
+        unilevelDownlineVisibleRows,
+        'Unilevel Downline'
+      );
     });
   }
 
   // Initial load with NO username → backend uses ROOT_DOWNLINE_HASH
   loadUnilevelDownlineData({ username: '' });
+}
+
+function applyUnilevelDownlineTableSearch() {
+  const input = document.getElementById('unilevel-downline-table-search');
+  const term = input ? input.value.trim().toLowerCase() : '';
+
+  if (!term) {
+    unilevelDownlineVisibleRows = unilevelDownlineAllRows.slice();
+  } else {
+    unilevelDownlineVisibleRows = unilevelDownlineAllRows.filter((row) =>
+      unilevelDownlineColumns.some((col) => {
+        const value = row[col.key];
+        return value && String(value).toLowerCase().includes(term);
+      })
+    );
+  }
+
+  renderUnilevelDownlineTable(unilevelDownlineVisibleRows);
+  const summaryEl = document.getElementById('unilevel-downline-summary');
+  if (summaryEl) {
+    renderUnilevelDownlineSummary(unilevelDownlineVisibleRows, summaryEl);
+  }
 }
 
 window.loadUnilevelDownlineData = loadUnilevelDownlineData;

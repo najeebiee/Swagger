@@ -2,7 +2,17 @@
 const SPONSORED_DOWNLINE_API_USER = 'ggitteam';
 const SPONSORED_DOWNLINE_ENDPOINT = '/api/sponsoredDownline';
 
-let sponsoredDownlineRowsCache = [];
+const sponsoredDownlineColumns = [
+  { key: 'idno',         label: 'ID NO' },
+  { key: 'registered',   label: 'REGISTERED' },
+  { key: 'user_name',    label: 'USER NAME' },
+  { key: 'user',         label: 'USER' },
+  { key: 'account_type', label: 'ACCOUNT TYPE' },
+  { key: 'payment',      label: 'PAYMENT' }
+];
+
+let sponsoredDownlineAllRows = [];
+let sponsoredDownlineVisibleRows = [];
 
 function getSponsoredDownlineApiKey() {
   return generateApiKey(); // same helper as other pages
@@ -32,16 +42,8 @@ function renderSponsoredDownlineSummary(rows, summaryEl) {
 // TABLE (uses shared renderTable from common.js)
 function renderSponsoredDownlineTable(rows) {
   const tableContainer = document.getElementById('sponsored-downline-table-container');
-  const columns = [
-    { key: 'idno',         label: 'ID NO' },
-    { key: 'registered',   label: 'REGISTERED' },
-    { key: 'user_name',    label: 'USER NAME' },
-    { key: 'user',         label: 'USER' },
-    { key: 'account_type', label: 'ACCOUNT TYPE' },
-    { key: 'payment',      label: 'PAYMENT' }
-  ];
 
-  renderTable(tableContainer, columns, rows);
+  renderTable(tableContainer, sponsoredDownlineColumns, rows);
 }
 
 // DATA LOADING – always call the API (like your "proper" user upline)
@@ -78,9 +80,10 @@ async function loadSponsoredDownlineData({ username }) {
       console.warn('No sponsored downline data found for username:', username || '(root)');
     }
 
-    sponsoredDownlineRowsCache = rows;
-    renderSponsoredDownlineSummary(rows, summaryEl);
-    renderSponsoredDownlineTable(rows);
+    sponsoredDownlineAllRows = rows;
+    sponsoredDownlineVisibleRows = rows;
+    renderSponsoredDownlineSummary(sponsoredDownlineVisibleRows, summaryEl);
+    renderSponsoredDownlineTable(sponsoredDownlineVisibleRows);
     return rows;
   } catch (error) {
     console.error('Failed to load sponsored downline data', error);
@@ -98,6 +101,9 @@ function initSponsoredDownlinePage() {
   const usernameInput = document.getElementById('sponsored-downline-username');
   const filterForm    = document.getElementById('sponsored-downline-filter-form');
   const tableSearchInput = document.getElementById('sponsored-downline-table-search');
+  const exportCsvBtn = document.getElementById('sponsored-downline-export-csv');
+  const exportXlsxBtn = document.getElementById('sponsored-downline-export-xlsx');
+  const exportPdfBtn = document.getElementById('sponsored-downline-export-pdf');
 
   if (filterForm) {
     filterForm.addEventListener('submit', (event) => {
@@ -108,26 +114,66 @@ function initSponsoredDownlinePage() {
   }
 
   if (tableSearchInput) {
-    tableSearchInput.addEventListener('input', () => {
-      const term = tableSearchInput.value.trim().toLowerCase();
+    tableSearchInput.addEventListener('input', applySponsoredDownlineTableSearch);
+  }
 
-      const rows = !term
-        ? sponsoredDownlineRowsCache
-        : sponsoredDownlineRowsCache.filter((row) =>
-            [
-              'user_name',
-              'user',
-              'account_type',
-              'payment'
-            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
-          );
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener('click', () => {
+      confirmExport('csv', () => {
+        exportRowsToCsv(
+          sponsoredDownlineColumns,
+          sponsoredDownlineVisibleRows,
+          'sponsored-downline.csv'
+        );
+        showExportSuccess('csv');
+      });
+    });
+  }
 
-      renderSponsoredDownlineTable(rows);
+  if (exportXlsxBtn) {
+    exportXlsxBtn.addEventListener('click', () => {
+      confirmExport('xlsx', () => {
+        exportRowsToXlsx(
+          sponsoredDownlineColumns,
+          sponsoredDownlineVisibleRows,
+          'sponsored-downline.xlsx'
+        );
+        showExportSuccess('xlsx');
+      });
+    });
+  }
+
+  if (exportPdfBtn) {
+    exportPdfBtn.addEventListener('click', () => {
+      exportTableToPdf(
+        sponsoredDownlineColumns,
+        sponsoredDownlineVisibleRows,
+        'Sponsored Downline'
+      );
     });
   }
 
   // Initial load with NO username → backend uses ROOT_DOWNLINE_HASH
   loadSponsoredDownlineData({ username: '' });
+}
+
+function applySponsoredDownlineTableSearch() {
+  const summaryEl = document.getElementById('sponsored-downline-summary');
+  const input = document.getElementById('sponsored-downline-table-search');
+  if (!input) return;
+
+  const term = input.value.trim().toLowerCase();
+
+  if (!term) {
+    sponsoredDownlineVisibleRows = sponsoredDownlineAllRows.slice();
+  } else {
+    sponsoredDownlineVisibleRows = sponsoredDownlineAllRows.filter((row) =>
+      sponsoredDownlineColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(term))
+    );
+  }
+
+  renderSponsoredDownlineSummary(sponsoredDownlineVisibleRows, summaryEl);
+  renderSponsoredDownlineTable(sponsoredDownlineVisibleRows);
 }
 
 window.loadSponsoredDownlineData = loadSponsoredDownlineData;

@@ -14,14 +14,31 @@
       <input id="codes-to" type="date" aria-label="To date" required />
     </label>
     <button type="submit">Apply</button>
-    <input
-      id="codes-table-search"
-      type="text"
-      class="toolbar-search"
-      placeholder="Search in table..."
-      aria-label="Search in loaded codes"
-    />
   </form>
+
+  <div class="table-toolbar">
+    <label>
+      Table search
+      <input
+        type="text"
+        id="codes-table-search"
+        class="table-search-input"
+        placeholder="Search within current results…"
+        aria-label="Search in table"
+      />
+    </label>
+    <div class="table-actions">
+      <button type="button" id="codes-export-csv" class="table-export-button">
+        CSV
+      </button>
+      <button type="button" id="codes-export-xlsx" class="table-export-button">
+        Excel
+      </button>
+      <button type="button" id="codes-export-pdf" class="table-export-button">
+        PDF
+      </button>
+    </div>
+  </div>
 
   <div id="codes-summary" class="page-summary"></div>
   <div id="codes-table-container" class="table-container"></div>

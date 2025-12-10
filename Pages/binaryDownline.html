@@ -13,14 +13,31 @@
              aria-label="Username for downline lookup" />
     </label>
     <button type="submit">Apply</button>
-    <input
-      id="binary-downline-table-search"
-      type="text"
-      class="toolbar-search"
-      placeholder="Search in table..."
-      aria-label="Search in loaded binary downline"
-    />
   </form>
+
+  <div class="table-toolbar">
+    <label>
+      Table search
+      <input
+        type="text"
+        id="binary-downline-table-search"
+        class="table-search-input"
+        placeholder="Search within current results…"
+        aria-label="Search in table"
+      />
+    </label>
+    <div class="table-actions">
+      <button type="button" id="binary-downline-export-csv" class="table-export-button">
+        CSV
+      </button>
+      <button type="button" id="binary-downline-export-xlsx" class="table-export-button">
+        Excel
+      </button>
+      <button type="button" id="binary-downline-export-pdf" class="table-export-button">
+        PDF
+      </button>
+    </div>
+  </div>
 
   <!-- Page summary and table container -->
 

@@ -2,7 +2,19 @@
 const BINARY_DOWNLINE_API_USER = 'ggitteam';
 const BINARY_DOWNLINE_ENDPOINT = '/api/binaryDownline';
 
-let binaryDownlineRowsCache = [];
+const binaryDownlineColumns = [
+  { key: 'idno',              label: 'ID NO' },
+  { key: 'registered',        label: 'REGISTERED' },
+  { key: 'user_name',         label: 'USER NAME' },
+  { key: 'user',              label: 'USER' },
+  { key: 'placement',         label: 'PLACEMENT' },
+  { key: 'placement_group',   label: 'PLACEMENT GROUP' },
+  { key: 'account_type',      label: 'ACCOUNT TYPE' },
+  { key: 'payment',           label: 'PAYMENT' }
+];
+
+let binaryDownlineAllRows = [];
+let binaryDownlineVisibleRows = [];
 
 function getBinaryDownlineApiKey() {
   return generateApiKey(); // same helper as other pages
@@ -32,18 +44,8 @@ function renderBinaryDownlineSummary(rows, summaryEl) {
 // TABLE (uses shared renderTable from common.js)
 function renderBinaryDownlineTable(rows) {
   const tableContainer = document.getElementById('binary-downline-table-container');
-  const columns = [
-    { key: 'idno',              label: 'ID NO' },
-    { key: 'registered',        label: 'REGISTERED' },
-    { key: 'user_name',         label: 'USER NAME' },
-    { key: 'user',              label: 'USER' },
-    { key: 'placement',         label: 'PLACEMENT' },
-    { key: 'placement_group',   label: 'PLACEMENT GROUP' },
-    { key: 'account_type',      label: 'ACCOUNT TYPE' },
-    { key: 'payment',           label: 'PAYMENT' }
-  ];
 
-  renderTable(tableContainer, columns, rows);
+  renderTable(tableContainer, binaryDownlineColumns, rows);
 }
 
 // DATA LOADING – always call the API (like your "proper" user upline)
@@ -80,9 +82,10 @@ async function loadBinaryDownlineData({ username }) {
       console.warn('No binary downline data found for username:', username || '(root)');
     }
 
-    binaryDownlineRowsCache = rows;
-    renderBinaryDownlineSummary(rows, summaryEl);
-    renderBinaryDownlineTable(rows);
+    binaryDownlineAllRows = rows;
+    binaryDownlineVisibleRows = rows;
+    renderBinaryDownlineSummary(binaryDownlineVisibleRows, summaryEl);
+    renderBinaryDownlineTable(binaryDownlineVisibleRows);
     return rows;
   } catch (error) {
     console.error('Failed to load binary downline data', error);
@@ -100,6 +103,9 @@ function initBinaryDownlinePage() {
   const usernameInput = document.getElementById('binary-downline-username');
   const filterForm    = document.getElementById('binary-downline-filter-form');
   const tableSearchInput = document.getElementById('binary-downline-table-search');
+  const exportCsvBtn = document.getElementById('binary-downline-export-csv');
+  const exportXlsxBtn = document.getElementById('binary-downline-export-xlsx');
+  const exportPdfBtn = document.getElementById('binary-downline-export-pdf');
 
   if (filterForm) {
     filterForm.addEventListener('submit', (event) => {
@@ -110,27 +116,54 @@ function initBinaryDownlinePage() {
   }
 
   if (tableSearchInput) {
-    tableSearchInput.addEventListener('input', () => {
-      const term = tableSearchInput.value.trim().toLowerCase();
+    tableSearchInput.addEventListener('input', applyBinaryDownlineTableSearch);
+  }
 
-      const rows = !term
-        ? binaryDownlineRowsCache
-        : binaryDownlineRowsCache.filter((row) =>
-            [
-              'user_name',
-              'user',
-              'placement',
-              'placement_group',
-              'account_type'
-            ].some((key) => String(row[key] ?? '').toLowerCase().includes(term))
-          );
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener('click', () => {
+      confirmExport('csv', () => {
+        exportRowsToCsv(binaryDownlineColumns, binaryDownlineVisibleRows, 'binary-downline.csv');
+        showExportSuccess('csv');
+      });
+    });
+  }
 
-      renderBinaryDownlineTable(rows);
+  if (exportXlsxBtn) {
+    exportXlsxBtn.addEventListener('click', () => {
+      confirmExport('xlsx', () => {
+        exportRowsToXlsx(binaryDownlineColumns, binaryDownlineVisibleRows, 'binary-downline.xlsx');
+        showExportSuccess('xlsx');
+      });
+    });
+  }
+
+  if (exportPdfBtn) {
+    exportPdfBtn.addEventListener('click', () => {
+      exportTableToPdf(binaryDownlineColumns, binaryDownlineVisibleRows, 'Binary Downline');
     });
   }
 
   // Initial load with NO username → backend uses ROOT_DOWNLINE_HASH
   loadBinaryDownlineData({ username: '' });
+}
+
+function applyBinaryDownlineTableSearch() {
+  const summaryEl = document.getElementById('binary-downline-summary');
+  const input = document.getElementById('binary-downline-table-search');
+  if (!input) return;
+
+  const term = input.value.trim().toLowerCase();
+
+  if (!term) {
+    binaryDownlineVisibleRows = binaryDownlineAllRows.slice();
+  } else {
+    binaryDownlineVisibleRows = binaryDownlineAllRows.filter((row) =>
+      binaryDownlineColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(term))
+    );
+  }
+
+  renderBinaryDownlineSummary(binaryDownlineVisibleRows, summaryEl);
+  renderBinaryDownlineTable(binaryDownlineVisibleRows);
 }
 
 window.loadBinaryDownlineData = loadBinaryDownlineData;

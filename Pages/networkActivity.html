@@ -16,41 +16,45 @@
   </form>
 
   <div class="table-toolbar">
-    <label>
-      Table search
-      <input
-        type="text"
-        id="network-activity-table-search"
-        class="table-search-input"
-        placeholder="Search within current results…"
-        aria-label="Search in Network Activity table"
-      />
-    </label>
-    <div class="table-actions">
+    <div class="table-toolbar-left">
+      <label class="table-search-label">
+        Table search
+        <input
+          type="text"
+          id="network-activity-table-search"
+          class="table-search-input"
+          placeholder="Search in current results…"
+          aria-label="Search in Network Activity table"
+        />
+      </label>
+    </div>
+    <div class="table-toolbar-right">
       <button
         type="button"
         id="network-activity-export-csv"
-        class="table-export-button"
+        class="export-btn"
       >
         CSV
       </button>
       <button
         type="button"
         id="network-activity-export-xlsx"
-        class="table-export-button"
+        class="export-btn"
       >
         Excel
       </button>
       <button
         type="button"
         id="network-activity-export-pdf"
-        class="table-export-button"
+        class="export-btn"
       >
         PDF
       </button>
     </div>
   </div>
 
-  <div id="network-activity-summary" class="page-summary"></div>
-  <div id="network-activity-table-container" class="table-container"></div>
+  <div id="network-activity-summary" class="card-grid"></div>
+  <div class="table-wrapper">
+    <div id="network-activity-table-container" class="table-container"></div>
+  </div>
 </section>

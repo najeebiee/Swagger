@@ -16,41 +16,45 @@
   </form>
 
   <div class="table-toolbar">
-    <label>
-      Table search
-      <input
-        type="text"
-        id="unilevel-downline-table-search"
-        class="table-search-input"
-        placeholder="Search within current results…"
-        aria-label="Search in Unilevel Downline table"
-      />
-    </label>
-    <div class="table-actions">
+    <div class="table-toolbar-left">
+      <label class="table-search-label">
+        Table search
+        <input
+          type="text"
+          id="unilevel-downline-table-search"
+          class="table-search-input"
+          placeholder="Search in current results…"
+          aria-label="Search in Unilevel Downline table"
+        />
+      </label>
+    </div>
+    <div class="table-toolbar-right">
       <button
         type="button"
         id="unilevel-downline-export-csv"
-        class="table-export-button"
+        class="export-btn"
       >
         CSV
       </button>
       <button
         type="button"
         id="unilevel-downline-export-xlsx"
-        class="table-export-button"
+        class="export-btn"
       >
         Excel
       </button>
       <button
         type="button"
         id="unilevel-downline-export-pdf"
-        class="table-export-button"
+        class="export-btn"
       >
         PDF
       </button>
     </div>
   </div>
 
-  <div id="unilevel-downline-summary" class="page-summary"></div>
-  <div id="unilevel-downline-table-container" class="table-container"></div>
+  <div id="unilevel-downline-summary" class="card-grid"></div>
+  <div class="table-wrapper">
+    <div id="unilevel-downline-table-container" class="table-container"></div>
+  </div>
 </section>

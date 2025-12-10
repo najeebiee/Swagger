@@ -7,47 +7,51 @@
   --text: #1f2933;
   --muted: #52606d;
   --accent: #4f46e5;
-  --accent-dark: #4338ca; /* Added for hover consistency */
+  --accent-dark: #4338ca;
 }
+
+/* RESET / GLOBAL -------------------------------------------------------- */
 
 * {
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
-  /* Using Inter font as a standard modern UI font */
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  padding: 0;
+  overflow-x: hidden; /* only tables scroll horizontally */
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   background: var(--bg);
   color: var(--text);
 }
 
-html,
-body {
-  overflow-x: hidden; /* only tables should scroll horizontally */
-}
+/* APP SHELL ------------------------------------------------------------- */
 
-/* --- Layout: App Shell --- */
 .app-shell {
   display: flex;
   min-height: 100vh;
   background: var(--bg);
+  padding-left: 240px; /* reserve space for fixed sidebar on desktop */
 }
 
-/* --- Layout: Sidebar (Desktop) --- */
+/* SIDEBAR (DESKTOP) ----------------------------------------------------- */
+
 .sidebar {
+  position: fixed;
+  inset: 0 auto 0 0; /* top:0; left:0; bottom:0; */
   width: 240px;
   background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
-  padding: 24px 20px;
+  padding: 2.5vh 1.6vw;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  position: sticky;
-  top: 0;
-  height: 100vh;
   flex-shrink: 0;
-  position: fixed
 }
 
 .sidebar-header {
@@ -57,21 +61,22 @@ body {
 }
 
 .app-title {
-  font-size: 1.25rem;
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
   font-weight: 700;
 }
 
 .app-subtitle {
   color: var(--muted);
   margin: 0;
-  font-size: 0.95rem;
+  font-size: clamp(0.8rem, 1.2vw, 0.95rem);
 }
 
-/* --- Navigation --- */
+/* NAV ------------------------------------------------------------------- */
+
 .nav-list {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 8px 0 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -84,14 +89,19 @@ body {
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 8px; /* Space for an optional icon */
-  padding: 12px 14px;
+  gap: 8px;
+  padding: 10px 14px;
   text-decoration: none;
   color: var(--text);
   border-radius: 10px;
   border: 1px solid transparent;
   font-weight: 600;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  font-size: 0.9rem;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .nav-link:hover {
@@ -106,68 +116,40 @@ body {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
-/* --- Layout: Main Content Area --- */
+/* MAIN CONTENT ---------------------------------------------------------- */
+
 #app-content {
   flex: 1;
-  padding: 32px;
+  padding: 3vh 3vw;
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  width: 100%; /* Ensures proper width calculation */
-  min-width: 0; /* Prevents overflow in flexible layouts */
+  min-width: 0; /* prevent flex overflow */
 }
 
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: 2vh;
 }
 
 .page-title {
-  margin: 0 0 8px;
-  font-size: 2rem;
+  margin: 0 0 0.6vh;
+  font-size: clamp(1.6rem, 2.4vw, 2rem);
   font-weight: 700;
 }
 
 .page-subtitle {
   margin: 0;
   color: var(--muted);
-  font-size: 1rem;
+  font-size: clamp(0.9rem, 1.4vw, 1rem);
 }
 
-/* --- Cards/Stats --- */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
-  margin-bottom: 16px; /* add bottom spacing before the table */
-}
+/* FILTER TOOLBAR -------------------------------------------------------- */
 
-.card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
-  /* Added subtle transition for interaction on hover/active in sales.css */
-}
-
-.card-title {
-  margin: 0 0 6px;
-  color: var(--muted);
-  font-size: 0.95rem;
-}
-
-.card-value {
-  margin: 0;
-  font-size: 1.8rem;
-  font-weight: 700;
-}
-
-/* --- Form/Filter Elements --- */
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  align-items: flex-end; /* Align items to the bottom baseline */
+  gap: 12px;
+  align-items: flex-end;
   margin-bottom: 16px;
 }
 
@@ -177,7 +159,7 @@ body {
   gap: 6px;
   font-weight: 600;
   color: var(--muted);
-  flex-shrink: 0; /* Prevents labels from shrinking */
+  font-size: 0.85rem;
 }
 
 input[type="text"],
@@ -197,7 +179,7 @@ input[type="date"] {
   min-width: 200px;
 }
 
-/* Improved Input Focus/Hover States */
+/* Input states */
 input[type="text"]:hover,
 input[type="date"]:hover {
   border-color: var(--muted);
@@ -206,18 +188,19 @@ input[type="date"]:hover {
 input[type="text"]:focus,
 input[type="date"]:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2); /* Soft blue glow */
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
   outline: none;
 }
 
-/* Improved Focus State for ALL interactive elements */
+/* Global focus */
 input:focus,
 button:focus,
 .nav-link:focus {
-  outline: 2px solid var(--accent); /* Clearer focus indicator */
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
+/* Primary buttons */
 button {
   background: var(--accent);
   color: #fff;
@@ -235,68 +218,44 @@ button:active {
   transform: translateY(1px);
 }
 
-/* --- Table Styles --- */
-.table-wrapper {
-  width: 100%;
-  max-width: 100%;
+/* STATS CARDS ----------------------------------------------------------- */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
   margin-top: 16px;
-  overflow-x: auto; /* Allows horizontal scrolling on small screens */
-  overflow-y: auto;
-  max-height: 60vh;
-  -webkit-overflow-scrolling: touch;
+  margin-bottom: 16px;
 }
 
-.table-wrapper table {
-  min-width: 100%;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
+.card {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 12px;
-  overflow: hidden;
+  padding: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-table thead {
-  background: #eef2f7;
+.card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
 }
 
-th,
-td {
-  padding: 12px 14px;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.95rem;
-  vertical-align: middle;
+.card-title {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
-th {
+.card-value {
+  margin: 0;
+  font-size: 1.7rem;
   font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  letter-spacing: 0.5px;
 }
 
-tbody tr:last-child td {
-  border-bottom: none;
-}
+/* TABLE TOOLBAR (SEARCH + EXPORT) -------------------------------------- */
 
-.empty-state {
-  padding: 32px;
-  background: var(--panel);
-  border: 2px dashed var(--border);
-  border-radius: 12px;
-  color: var(--muted);
-  text-align: center;
-  font-size: 1.1rem;
-  font-style: italic;
-  margin-top: 16px;
-}
-
-/* Table toolbar: holds table search and export buttons */
 .table-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -321,14 +280,15 @@ tbody tr:last-child td {
   flex-direction: column;
   gap: 4px;
   font-weight: 600;
-  color: var(--muted); /* use existing muted text color if available */
-  font-size: 0.85rem;
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 
 .table-search-input {
   max-width: 260px;
 }
 
+/* Export pill buttons */
 .export-btn {
   padding: 8px 14px;
   border-radius: 999px;
@@ -338,7 +298,11 @@ tbody tr:last-child td {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.05s ease;
 }
 
 .export-btn:hover {
@@ -351,9 +315,54 @@ tbody tr:last-child td {
   transform: translateY(1px);
 }
 
-.card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+/* TABLE + WRAPPER ------------------------------------------------------- */
+
+.table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 12px;
+  overflow-x: auto;          /* horizontal scroll when needed */
+  overflow-y: auto;          /* vertical scroll inside table area */
+  max-height: 60vh;          /* keep footer & buttons visible */
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrapper table {
+  min-width: 100%;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+thead {
+  background: #eef2f7;
+}
+
+th,
+td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+th {
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  letter-spacing: 0.5px;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
 }
 
 tbody tr:nth-child(odd) {
@@ -364,12 +373,26 @@ tbody tr:hover {
   background: rgba(79, 70, 229, 0.05);
 }
 
-/* --- Responsive Design for Mobile (<= 768px) --- */
+.empty-state {
+  padding: 24px;
+  background: var(--panel);
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 1rem;
+  font-style: italic;
+  margin-top: 16px;
+}
+
+/* RESPONSIVE BREAKPOINTS ----------------------------------------------- */
+
+/* Tablet tweaks */
 @media (max-width: 992px) {
   .toolbar {
     flex-wrap: wrap;
     align-items: flex-start;
-    gap: 12px;
+    gap: 10px;
   }
 
   .toolbar label {
@@ -381,12 +404,13 @@ tbody tr:hover {
   }
 }
 
+/* Mobile: sidebar becomes top bar, content full width */
 @media (max-width: 768px) {
   .app-shell {
     flex-direction: column;
+    padding-left: 0; /* no reserved sidebar space */
   }
 
-  /* Sidebar becomes a horizontal header/navbar */
   .sidebar {
     position: relative;
     width: 100%;
@@ -394,10 +418,10 @@ tbody tr:hover {
     flex-direction: row;
     align-items: center;
     gap: 16px;
-    padding: 12px 20px; /* Reduced vertical padding */
-    border-bottom: 1px solid var(--border); /* Better visual separation */
+    padding: 1.4vh 3vw;
     border-right: none;
-    overflow-x: auto; /* Allows scrolling if many nav links exist */
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -405,39 +429,35 @@ tbody tr:hover {
     flex-shrink: 0;
     margin-right: 16px;
   }
-  
-  /* Hide subtitle on small screens to save space */
+
   .app-subtitle {
-      display: none;
+    display: none; /* save horizontal space */
   }
 
   .nav-list {
     flex-direction: row;
-    flex-wrap: nowrap; /* Keep links inline */
+    flex-wrap: nowrap;
     flex-grow: 1;
     gap: 6px;
   }
-  
+
   .nav-link {
     flex-shrink: 0;
-    padding: 8px 12px; /* Smaller link size */
+    padding: 6px 10px;
+    font-size: 0.8rem;
   }
 
   #app-content {
-    padding: 20px 16px; /* Reduced padding for mobile */
-  }
-  
-  .page-title {
-    font-size: 1.75rem;
-  }
-
-  .page-subtitle {
-    font-size: 0.9rem;
+    padding: 2.5vh 4vw;
+    max-width: 100%;
+    margin: 0;
   }
 
   .table-toolbar {
     flex-direction: column;
     align-items: stretch;
+    gap: 6px;          /* tighter spacing between search & buttons */
+    margin: 10px 0 4px;
   }
 
   .table-toolbar-left,
@@ -452,10 +472,28 @@ tbody tr:hover {
   .table-search-input {
     max-width: 100%;
   }
+
+  .card-grid {
+    grid-template-columns: 1fr; /* one card per row */
+  }
+
+  .table-wrapper {
+    max-height: 55vh; /* a bit shorter on small screens */
+  }
 }
 
-@media (max-width: 600px) {
-  .card-grid {
-    grid-template-columns: 1fr; /* one card per row on small phones */
+/* Very small phones */
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 1.4rem;
+  }
+
+  .toolbar {
+    gap: 8px;
+  }
+
+  th,
+  td {
+    padding: 10px 8px;
   }
 }

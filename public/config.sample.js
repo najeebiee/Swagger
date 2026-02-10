@@ -1,4 +1,4 @@
 window.__APP_CONFIG__ = {
-  SUPABASE_URL: 'https://kqgdmzorfsltaoyqyhwq.supabase.co',
-  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxZ2Rtem9yZnNsdGFveXF5aHdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzc1MTgsImV4cCI6MjA4NTg1MzUxOH0.7lbo1KMU7CxZWF0yKE3Gkt-P1LYRPJSrxsxmUuyWwcE'
+  SUPABASE_URL: 'https://your-project.supabase.co',
+  SUPABASE_ANON_KEY: 'your-anon-key'
 };

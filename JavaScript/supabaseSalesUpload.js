@@ -37,6 +37,7 @@ let supabaseBaseRows = [];
 let supabaseItemsByRowId = new Map();
 let currentMode = 'supabase';
 let currentFilename = '';
+let supabaseItemsLoadWarning = '';
 
 function initSupabaseSalesUpload() {
   const tableContainer = document.getElementById('tableContainer');
@@ -477,9 +478,10 @@ function renderCurrentTable(rows, mode) {
 
     const actionTd = document.createElement('td');
     const badge = document.createElement('span');
-    const itemCount = mode === 'preview'
-      ? (row.items ? row.items.length : 0)
-      : (supabaseItemsByRowId.get(row.id) ? supabaseItemsByRowId.get(row.id).length : 0);
+    const rowItems = mode === 'preview'
+      ? (row.items || [])
+      : getItemsForRow(row, supabaseItemsByRowId);
+    const itemCount = rowItems.length;
     badge.className = 'item-badge';
     badge.textContent = `${itemCount} items`;
     actionTd.appendChild(badge);
@@ -502,6 +504,53 @@ function renderCurrentTable(rows, mode) {
   tableContainer.appendChild(table);
 }
 
+function canonicalizeItemType(value) {
+  const normalizedKey = safeString(value).toLowerCase().replace(/\s+/g, ' ');
+  return TYPE_CANON_MAP[normalizedKey] || null;
+}
+
+function parseItemsFromRawText(raw) {
+  if (!raw) return [];
+  const lines = String(raw)
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n')
+    .flatMap((line) => line.split(','))
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const items = [];
+  lines.forEach((line) => {
+    const match = line.match(/^(.+?)\s*[x×*]\s*(\d+)\s*$/i);
+    if (!match) return;
+    const canonical = canonicalizeItemType(match[1]);
+    if (!canonical) return;
+    const qty = parseInt(match[2], 10);
+    if (!qty || Number.isNaN(qty)) return;
+    items.push({ item_type: canonical, qty });
+  });
+
+  return items;
+}
+
+function getItemsForRow(row, itemsMap) {
+  const loadedItems = itemsMap && row.id
+    ? (itemsMap.get(row.id) || [])
+    : (row.items || []);
+
+  if (loadedItems.length) {
+    return loadedItems
+      .map((item) => {
+        const canonical = canonicalizeItemType(item.item_type);
+        if (!canonical) return null;
+        return { item_type: canonical, qty: Number(item.qty || 0) };
+      })
+      .filter((item) => item && item.qty > 0);
+  }
+
+  return parseItemsFromRawText(row.items_raw);
+}
+
 function computeCardsFromRows(rows, itemsMap) {
   const nameSet = new Set();
   const totals = {
@@ -516,14 +565,11 @@ function computeCardsFromRows(rows, itemsMap) {
     const nameKey = (row.buyer_name || '').trim().toLowerCase();
     if (nameKey) nameSet.add(nameKey);
 
-    const items = itemsMap && row.id
-      ? (itemsMap.get(row.id) || [])
-      : (row.items || []);
+    const items = getItemsForRow(row, itemsMap);
 
     items.forEach((item) => {
-      const label = item.item_type;
-      if (totals[label] != null) {
-        totals[label] += Number(item.qty || 0);
+      if (totals[item.item_type] != null) {
+        totals[item.item_type] += Number(item.qty || 0);
       }
     });
   });
@@ -738,21 +784,28 @@ async function loadSupabaseRowsByDateRange() {
   }
 
   supabaseRows = Array.isArray(data) ? data : [];
-  supabaseItemsByRowId = await fetchItemsForRows(supabaseRows.map((row) => row.id));
+  const itemResult = await fetchItemsForRows(supabaseRows.map((row) => row.id));
+  supabaseItemsByRowId = itemResult.map;
+  supabaseItemsLoadWarning = itemResult.warning;
   supabaseBaseRows = supabaseRows.slice();
   supabaseVisibleRows = supabaseRows.slice();
   currentMode = 'supabase';
 
   applySearchFilter();
-  clearStatus();
+  if (supabaseItemsLoadWarning) {
+    showStatus(supabaseItemsLoadWarning, 'warn');
+  } else {
+    clearStatus();
+  }
 }
 
 async function fetchItemsForRows(rowIds) {
   const map = new Map();
-  if (!rowIds.length) return map;
+  if (!rowIds.length) return { map, warning: '' };
 
   const supabase = window.getSupabase();
   const chunkSize = 1000;
+  let hadError = false;
 
   for (let i = 0; i < rowIds.length; i += chunkSize) {
     const chunk = rowIds.slice(i, i + chunkSize);
@@ -762,6 +815,7 @@ async function fetchItemsForRows(rowIds) {
       .in('row_id', chunk);
 
     if (error) {
+      hadError = true;
       console.error('Failed to load items:', error);
       continue;
     }
@@ -777,7 +831,11 @@ async function fetchItemsForRows(rowIds) {
     });
   }
 
-  return map;
+  const warning = hadError
+    ? 'Some item records could not be loaded from sales_items (possible RLS policy issue). Totals are being derived from items_raw fallback when available.'
+    : '';
+
+  return { map, warning };
 }
 
 async function ensureSupabaseItemsForRow(rowId) {
@@ -800,6 +858,13 @@ async function ensureSupabaseItemsForRow(rowId) {
     item_type: item.item_type,
     qty: item.qty
   }));
+
+  if (!items.length) {
+    const row = supabaseRows.find((entry) => String(entry.id) === String(rowId));
+    const fallbackItems = row ? parseItemsFromRawText(row.items_raw) : [];
+    supabaseItemsByRowId.set(rowId, fallbackItems);
+    return fallbackItems;
+  }
 
   supabaseItemsByRowId.set(rowId, items);
   return items;

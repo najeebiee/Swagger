@@ -2,3 +2,6 @@
 .env.local
 public/config.js
 docs
+node_modules
+proxy/node_modules
+.vercel

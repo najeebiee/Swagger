@@ -211,10 +211,11 @@ function initSupabaseSalesUpload() {
   if (tableWrapper) {
     tableWrapper.addEventListener('click', async (event) => {
       const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      if (!target.classList.contains('preview-items-btn')) return;
-      const rowIndex = target.dataset.index;
-      const rowId = target.dataset.rowId;
+      if (!(target instanceof Element)) return;
+      const button = target.closest('.preview-items-btn');
+      if (!button) return;
+      const rowIndex = button.dataset.index;
+      const rowId = button.dataset.rowId;
       if (currentMode === 'preview' && rowIndex != null) {
         const row = parsedVisibleRows[Number(rowIndex)];
         if (row) openItemsModal(row, row.items, row.warnings);
@@ -546,6 +547,7 @@ function renderCurrentTable(rows, mode) {
     });
 
     const actionTd = document.createElement('td');
+    actionTd.className = 'actions-cell';
     const badge = document.createElement('span');
     const itemCount = getItemsForRow(row, mode === 'preview' ? null : supabaseItemsByRowId).length;
     badge.className = 'item-badge';
@@ -554,7 +556,9 @@ function renderCurrentTable(rows, mode) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'preview-items-btn';
-    button.textContent = 'Preview Items';
+    button.setAttribute('aria-label', 'Preview Items');
+    button.title = 'Preview Items';
+    button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke-width="1.8"/></svg>';
     if (mode === 'preview') {
       button.dataset.index = String(index);
     } else {
@@ -828,7 +832,8 @@ async function fetchItemsForRows(rowIds) {
   if (!rowIds.length) return map;
 
   const supabase = window.getSupabase();
-  const chunkSize = 1000;
+  // Keep IN-filter query strings below URL limits (UUID lists get very long).
+  const chunkSize = 120;
 
   for (let i = 0; i < rowIds.length; i += chunkSize) {
     const chunk = rowIds.slice(i, i + chunkSize);

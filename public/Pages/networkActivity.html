@@ -41,6 +41,13 @@
     <div class="table-toolbar-right">
       <button
         type="button"
+        id="network-activity-sync"
+        class="export-btn"
+      >
+        Sync
+      </button>
+      <button
+        type="button"
         id="network-activity-export-csv"
         class="export-btn"
       >
@@ -61,6 +68,18 @@
         PDF
       </button>
     </div>
+  </div>
+
+  <div id="network-activity-sync-status" class="empty-state" style="display:none;"></div>
+  <div id="network-activity-sync-progress" class="sync-progress hidden" aria-live="polite">
+    <div class="sync-progress__meta">
+      <span id="network-activity-sync-progress-label">Sync progress</span>
+      <span id="network-activity-sync-progress-value">0%</span>
+    </div>
+    <div class="sync-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div id="network-activity-sync-progress-fill" class="sync-progress__fill"></div>
+    </div>
+    <div id="network-activity-sync-progress-detail" class="sync-progress__detail"></div>
   </div>
 
   <div id="network-activity-summary" class="card-grid"></div>

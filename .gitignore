@@ -2,3 +2,6 @@
 .env.local
 public/config.js
 docs
+
+.vercel
+.env*.local

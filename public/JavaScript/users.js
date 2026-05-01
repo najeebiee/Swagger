@@ -4,6 +4,8 @@ const USERS_ENDPOINT = '/api/users';
 // random comment
 const userColumns = [
   { key: 'user_name',    label: 'Username' },
+  { key: 'email_address', label: 'Email' },
+  { key: 'mobile_number', label: 'Mobile Number' },
   { key: 'name',         label: 'Name' },
   { key: 'sponsored',    label: 'Sponsored By' },
   { key: 'placement',    label: 'Placement' },

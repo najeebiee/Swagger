@@ -262,6 +262,131 @@ button:active {
   font-weight: 700;
 }
 
+/* DASHBOARD ----------------------------------------------------------- */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.dashboard-panel {
+  padding: 14px;
+}
+
+.dashboard-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.dashboard-panel__head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.dashboard-trend,
+.dashboard-list {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard-trend-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 130px;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-trend-row__date {
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.dashboard-trend-row__bar {
+  height: 10px;
+  border-radius: 999px;
+  background: #eef2f7;
+  overflow: hidden;
+}
+
+.dashboard-trend-row__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
+}
+
+.dashboard-trend-row__value {
+  font-size: 0.84rem;
+  text-align: right;
+  font-weight: 600;
+}
+
+.dashboard-list-item {
+  display: grid;
+  gap: 6px;
+}
+
+.dashboard-list-item__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.86rem;
+}
+
+.dashboard-list-item__label {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.dashboard-list-item__value {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.dashboard-bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #eef2f7;
+  overflow: hidden;
+}
+
+.dashboard-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #4f46e5;
+}
+
+.dashboard-upload-row {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fcfdff;
+}
+
+.dashboard-upload-row__name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.dashboard-upload-row__meta {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.dashboard-actions {
+  margin-top: 10px;
+}
+
+.dashboard-actions .nav-link {
+  display: inline-flex;
+}
+
 /* TABLE TOOLBAR (SEARCH + EXPORT) -------------------------------------- */
 
 .table-toolbar {
@@ -296,6 +421,7 @@ button:active {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .table-filter-row {
@@ -341,6 +467,47 @@ button:active {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
+}
+
+.sync-progress {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.sync-progress__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.sync-progress__track {
+  margin-top: 8px;
+  height: 10px;
+  width: 100%;
+  border-radius: 999px;
+  background: #eef2f7;
+  overflow: hidden;
+}
+
+.sync-progress__fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4f46e5, #2563eb);
+  transition: width 0.2s ease;
+}
+
+.sync-progress__detail {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 
 /* Export pill buttons */
@@ -552,6 +719,27 @@ tbody tr:hover {
   margin-right: 8px;
 }
 
+.actions-cell {
+  white-space: nowrap;
+}
+
+.preview-items-btn {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-items-btn svg {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+}
+
 .warn-pill {
   display: inline-flex;
   align-items: center;
@@ -660,6 +848,19 @@ tbody tr:hover {
 
   .card-grid {
     grid-template-columns: 1fr; /* one card per row */
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-trend-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .dashboard-trend-row__value {
+    text-align: left;
   }
 
   .table-wrapper {

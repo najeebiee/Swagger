@@ -70,6 +70,10 @@ async function loadPage(route, path) {
       window.initSalesPage();
     }
 
+    if (route === 'home' && typeof window.initHomeDashboard === 'function') {
+      window.initHomeDashboard();
+    }
+
     if (route === 'supabaseSalesUpload' && typeof window.initSupabaseSalesUpload === 'function') {
       window.initSupabaseSalesUpload();
     }

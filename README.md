@@ -91,7 +91,8 @@ When deployed on Vercel, the frontend can call the API routes under `/api/`, suc
 
 ## Screenshots
 
-Optional screenshots of the system can be added here.
+<img width="1907" height="1078" alt="image" src="https://github.com/user-attachments/assets/0f038a4a-1f12-4c1b-a0ac-9f1aa6a0a173" />
+
 
 ## Author
 
